@@ -3,7 +3,7 @@
 // Replace TMDB_KEY with your actual TMDB API key from
 // https://www.themoviedb.org/settings/api
 // ============================================================
-export const TMDB_KEY = "063b2e760a0cde0e6dcd2e3838192421";
+export const TMDB_KEY = import.meta.env.VITE_TMDB_KEY || "063b2e760a0cde0e6dcd2e3838192421";
 // Replace with your TMDB API key
 // Used in every single API call throughout the site
 

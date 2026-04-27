@@ -7,6 +7,7 @@ const dbConfig = {
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false },
 };
 
 const pool = new Pool(dbConfig);

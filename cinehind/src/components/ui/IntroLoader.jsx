@@ -65,7 +65,7 @@ export default function IntroLoader({ onDone }) {
             backgroundClip: "text",
           }}
         >
-          CINEHIND
+          CINNY
         </h1>
         <p
           style={{

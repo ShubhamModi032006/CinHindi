@@ -1,14 +1,14 @@
 // LocalStorage Keys
 export const LS = {
-  INTRO_SHOWN: "cinehind_intro_shown",
-  THEME: "cinehind_theme",
-  ACCENT: "cinehind_accent",
-  MODE: "cinehind_mode",
-  DEFAULT_LANG: "cinehind_default_lang",
-  AUTOPLAY: "cinehind_autoplay",
-  WATCH_LATER: "cinehind_watch_later",
-  WATCH_HISTORY: "cinehind_watch_history",
-  CONTINUE_WATCHING: "cinehind_continue_watching",
+  INTRO_SHOWN: "cinny_intro_shown",
+  THEME: "cinny_theme",
+  ACCENT: "cinny_accent",
+  MODE: "cinny_mode",
+  DEFAULT_LANG: "cinny_default_lang",
+  AUTOPLAY: "cinny_autoplay",
+  WATCH_LATER: "cinny_watch_later",
+  WATCH_HISTORY: "cinny_watch_history",
+  CONTINUE_WATCHING: "cinny_continue_watching",
 };
 
 export const THEMES = {

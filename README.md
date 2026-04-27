@@ -1,10 +1,10 @@
 <div align="center">
-  <h1>🍿 CinHindi OTT Streaming Platform</h1>
+  <h1>🍿 Cinny OTT Streaming Platform</h1>
   <p>A full-stack, personalized media streaming application for Movies, Series, and Anime.</p>
 </div>
 
 ## 📖 What is this project about?
-CinHindi is a comprehensive, full-stack OTT (Over-The-Top) media discovery and streaming platform. It provides a seamless viewing experience with a heavy focus on intuitive personalization. It features a custom "Suggested" recommendation engine that dynamically cross-matches exact languages (e.g., Bollywood vs Hollywood) and genre tags to deliver highly accurate suggestions based on the user's watch history.
+Cinny is a comprehensive, full-stack OTT (Over-The-Top) media discovery and streaming platform. It provides a seamless viewing experience with a heavy focus on intuitive personalization. It features a custom "Suggested" recommendation engine that dynamically cross-matches exact languages (e.g., Bollywood vs Hollywood) and genre tags to deliver highly accurate suggestions based on the user's watch history.
 
 ## 💻 Tech Stack
 **Frontend:**
@@ -63,11 +63,11 @@ DB_USER=postgres
 DB_PASSWORD=your_postgres_password
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=cinehind
+DB_NAME=cinny
 JWT_SECRET=your_super_secret_jwt_key
 ```
 
-**2. Frontend Environment (`/cinehind/.env`)**
+**2. Frontend Environment (`/cinny/.env`)**
 ```env
 VITE_TMDB_KEY=your_tmdb_api_v3_key
 ```
@@ -78,7 +78,7 @@ VITE_TMDB_KEY=your_tmdb_api_v3_key
 TMDB uses entirely different internal Genre IDs for Movies versus TV Shows (e.g., *Action* is `28` for Movies, but *Action & Adventure* is `10759` for TV). If a user watches an Action Movie and navigates to the Series page, the app's internal translation engine automatically converts the movie genre IDs into their exact TV Show equivalents before querying the API. This ensures cross-platform suggestions are flawlessly accurate.
 
 **2. Database Auto-Initialization**
-When the Node.js server starts, `db.js` is programmed to automatically connect to the default Postgres instance, check if the `cinehind` database exists, create it if it doesn't, and subsequently build all the necessary relational tables (`users`, `watch_history`, `watch_later`, `continue_watching`). No manual SQL setup is required!
+When the Node.js server starts, `db.js` is programmed to automatically connect to the default Postgres instance, check if the `cinny` database exists, create it if it doesn't, and subsequently build all the necessary relational tables (`users`, `watch_history`, `watch_later`, `continue_watching`). No manual SQL setup is required!
 
 **3. "Wood" Language Locking**
 To ensure the Indian/Bollywood aesthetic isn't cluttered by generic Hollywood results, the app uses TMDB's `with_original_language` parameter to strictly lock queries to Indian regional languages (`hi|ta|te|ml|kn|bn|pa`) when in "Indian Mode", providing a deeply localized user experience.

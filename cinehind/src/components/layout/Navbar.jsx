@@ -91,7 +91,7 @@ export default function Navbar() {
               backgroundClip: "text",
             }}
           >
-            CINEHIND
+            CINNY
           </button>
 
           {/* ── Desktop nav links (centre) ───────────────────── */}

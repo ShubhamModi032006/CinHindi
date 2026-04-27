@@ -14,6 +14,8 @@ export function AppProvider({ children }) {
   // ── Active Streaming Provider (null = all content) ────────
   const [activeProvider, setActiveProvider] = useState(null);
 
+  const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
   // ── Auth ──────────────────────────────────────────────────
   const [token, setToken] = useState(() => localStorage.getItem("auth_token") || null);
   const [user, setUser] = useState(() => {
@@ -148,7 +150,7 @@ export function AppProvider({ children }) {
 
     if (token) {
       try {
-        await fetch("http://localhost:5000/api/watchlater", {
+        await fetch(`${API_URL}/api/watchlater`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({ item_id: item.id, item_type: item.type, title: item.title, poster: item.poster })
@@ -172,7 +174,7 @@ export function AppProvider({ children }) {
 
     if (token) {
       try {
-        await fetch("http://localhost:5000/api/continuewatching", {
+        await fetch(`${API_URL}/api/continuewatching`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({ item_id: item.id, item_type: item.type, title: item.title, poster: item.poster, season: item.season, episode: item.episode })
@@ -191,7 +193,7 @@ export function AppProvider({ children }) {
 
     if (token) {
       try {
-        await fetch(`http://localhost:5000/api/continuewatching/${id}/${type}`, {
+        await fetch(`${API_URL}/api/continuewatching/${id}/${type}`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${token}` }
         });
@@ -206,7 +208,7 @@ export function AppProvider({ children }) {
 
     if (token) {
       try {
-        await fetch("http://localhost:5000/api/continuewatching", { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+        await fetch(`${API_URL}/api/continuewatching`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
       } catch (err) { console.error("Sync error", err); }
     }
   }, [showToast, token]);
@@ -227,7 +229,7 @@ export function AppProvider({ children }) {
 
     if (token) {
       try {
-        await fetch("http://localhost:5000/api/history", {
+        await fetch(`${API_URL}/api/history`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({ item_id: item.id, item_type: item.type, title: item.title, poster: item.poster })
@@ -243,7 +245,7 @@ export function AppProvider({ children }) {
 
     if (token) {
       try {
-        await fetch("http://localhost:5000/api/history", { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
+        await fetch(`${API_URL}/api/history`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
       } catch (err) { console.error("Sync error", err); }
     }
   }, [showToast, token]);
@@ -254,9 +256,9 @@ export function AppProvider({ children }) {
     const fetchUserData = async () => {
       try {
         const [histRes, wlRes, cwRes] = await Promise.all([
-          fetch("http://localhost:5000/api/history", { headers: { "Authorization": `Bearer ${token}` } }),
-          fetch("http://localhost:5000/api/watchlater", { headers: { "Authorization": `Bearer ${token}` } }),
-          fetch("http://localhost:5000/api/continuewatching", { headers: { "Authorization": `Bearer ${token}` } })
+          fetch(`${API_URL}/api/history`, { headers: { "Authorization": `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/watchlater`, { headers: { "Authorization": `Bearer ${token}` } }),
+          fetch(`${API_URL}/api/continuewatching`, { headers: { "Authorization": `Bearer ${token}` } })
         ]);
         if (histRes.ok) { const data = await histRes.json(); setWatchHistory(data.map(d => ({ ...d, id: d.item_id, type: d.item_type }))); }
         if (wlRes.ok) { const data = await wlRes.json(); setWatchLater(data.map(d => ({ ...d, id: d.item_id, type: d.item_type }))); }

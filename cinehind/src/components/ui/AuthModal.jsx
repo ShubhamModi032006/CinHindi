@@ -14,7 +14,8 @@ export default function AuthModal({ onClose }) {
     setLoading(true);
     
     try {
-      const url = isLogin ? "http://localhost:5000/api/auth/login" : "http://localhost:5000/api/auth/signup";
+      const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+      const url = isLogin ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/signup`;
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

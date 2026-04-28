@@ -21,15 +21,19 @@ import SearchPage from "./pages/SearchPage";
 import GenrePage from "./pages/GenrePage";
 import WatchLaterPage from "./pages/WatchLaterPage";
 
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+
 // Router component
 function AppRouter() {
-  const { page } = useApp();
+  const location = useLocation();
+  const isWatch = location.pathname.startsWith("/watch/");
 
-  // Watch page gets its own full layout (no Navbar)
-  if (page.name === "watch") {
+  if (isWatch) {
     return (
       <div style={{ background: "#000", minHeight: "100vh" }}>
-        <WatchPage />
+        <Routes>
+          <Route path="/watch/:type/:id" element={<WatchPage />} />
+        </Routes>
       </div>
     );
   }
@@ -38,16 +42,19 @@ function AppRouter() {
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <Navbar />
       <main>
-        {page.name === "home" && <HomePage />}
-        {page.name === "movies" && <MoviesPage />}
-        {page.name === "series" && <SeriesPage />}
-        {page.name === "anime" && <AnimePage />}
-        {page.name === "gems" && <HiddenGemsPage />}
-        {page.name === "detail" && <DetailPage />}
-        {page.name === "settings" && <SettingsPage />}
-        {page.name === "search" && <SearchPage />}
-        {page.name === "genre" && <GenrePage />}
-        {page.name === "watchlater" && <WatchLaterPage />}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/movies" element={<MoviesPage />} />
+          <Route path="/series" element={<SeriesPage />} />
+          <Route path="/anime" element={<AnimePage />} />
+          <Route path="/gems" element={<HiddenGemsPage />} />
+          <Route path="/detail/:type/:id" element={<DetailPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/genre/:genreId" element={<GenrePage />} />
+          <Route path="/watchlater" element={<WatchLaterPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
     </div>
   );

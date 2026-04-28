@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { fetchTmdb } from "../hooks/useTmdb";
 import MediaCard from "../components/ui/MediaCard";
@@ -24,8 +25,14 @@ function getPlayerSources(id, type, season, episode) {
 const SOURCE_LABELS = ["Videasy", "Screenscape", "Vidsrc", "Vidlink"];
 
 export default function WatchPage() {
-  const { page: appPage, navigate, saveContinueWatching, addToHistory, autoplay, accent } = useApp();
-  const { id, type, title, poster, season: initSeason = 1, episode: initEpisode = 1 } = appPage.params || {};
+  const { navigate, saveContinueWatching, addToHistory, autoplay, accent } = useApp();
+  const { id, type } = useParams();
+  const [searchParams] = useSearchParams();
+  const title = searchParams.get("title") || "Unknown";
+  const poster = searchParams.get("poster") || "";
+  const initSeason = searchParams.get("season") || 1;
+  const initEpisode = searchParams.get("episode") || 1;
+
   const accentColor = accent === "orange" ? "#f5a623" : accent === "blue" ? "#2563eb" : accent === "purple" ? "#7c3aed" : "#e50914";
 
   const [season, setSeason]   = useState(Number(initSeason) || 1);

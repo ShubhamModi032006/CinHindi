@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { fetchTmdb } from "../hooks/useTmdb";
 import { backdropUrl, posterUrl, ytEmbedUrl } from "../config/tmdb";
@@ -29,8 +30,8 @@ function CastCircle({ person }) {
 }
 
 export default function DetailPage() {
-  const { page: appPage, navigate, toggleWatchLater, isInWatchLater, accent } = useApp();
-  const { id, type } = appPage.params || {};
+  const { navigate, toggleWatchLater, isInWatchLater, accent } = useApp();
+  const { id, type } = useParams();
   const accentColor = accent === "orange" ? "#f5a623" : accent === "blue" ? "#2563eb" : accent === "purple" ? "#7c3aed" : "#e50914";
 
   const [info, setInfo] = useState(null);

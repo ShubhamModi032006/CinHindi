@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate as useRouterNavigate, useLocation } from "react-router-dom";
 import { LS, THEMES, ACCENTS } from "../config/constants";
 
 const AppContext = createContext(null);
@@ -110,8 +111,56 @@ export function AppProvider({ children }) {
     }, 2500);
   }, []);
 
+  const routerNavigate = useRouterNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const path = location.pathname;
+    let name = "home";
+    if (path.startsWith("/movies")) name = "movies";
+    else if (path.startsWith("/series")) name = "series";
+    else if (path.startsWith("/anime")) name = "anime";
+    else if (path.startsWith("/gems")) name = "gems";
+    else if (path.startsWith("/detail")) name = "detail";
+    else if (path.startsWith("/watchlater")) name = "watchlater";
+    else if (path.startsWith("/watch")) name = "watch";
+    else if (path.startsWith("/settings")) name = "settings";
+    else if (path.startsWith("/search")) name = "search";
+    else if (path.startsWith("/genre")) name = "genre";
+    
+    // Update the state to keep Navbar highlighting working
+    setPage((prev) => prev.name === name ? prev : { name, params: prev.params });
+  }, [location.pathname]);
+
   // ── Navigation with progress bar ─────────────────────────
   const navigate = useCallback((name, params = {}) => {
+    let path = "/";
+    if (name === "home") path = "/";
+    else if (name === "movies") path = "/movies";
+    else if (name === "series") path = "/series";
+    else if (name === "anime") path = "/anime";
+    else if (name === "gems") path = "/gems";
+    else if (name === "detail") path = `/detail/${params.type}/${params.id}`;
+    else if (name === "watch") {
+      path = `/watch/${params.type}/${params.id}`;
+      const sp = new URLSearchParams();
+      if (params.season) sp.set("season", params.season);
+      if (params.episode) sp.set("episode", params.episode);
+      if (params.title) sp.set("title", params.title);
+      if (params.poster) sp.set("poster", params.poster);
+      if (sp.toString()) path += `?${sp.toString()}`;
+    }
+    else if (name === "settings") path = "/settings";
+    else if (name === "search") {
+      path = `/search`;
+      if (params.q) path += `?q=${encodeURIComponent(params.q)}`;
+    }
+    else if (name === "genre") {
+      path = `/genre/${params.genreId}`;
+      if (params.genreName) path += `?name=${encodeURIComponent(params.genreName)}`;
+    }
+    else if (name === "watchlater") path = "/watchlater";
+
     setIsNavigating(true);
     setProgress(0);
     if (progressTimer.current) clearInterval(progressTimer.current);
@@ -125,12 +174,13 @@ export function AppProvider({ children }) {
       clearInterval(progressTimer.current);
       setProgress(100);
       setPage({ name, params });
+      routerNavigate(path);
       setTimeout(() => {
         setProgress(0);
         setIsNavigating(false);
       }, 400);
     }, 400);
-  }, []);
+  }, [routerNavigate]);
 
   // ── Watch Later ───────────────────────────────────────────
   const toggleWatchLater = useCallback(async (item) => {

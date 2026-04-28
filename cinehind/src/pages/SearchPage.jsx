@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { fetchTmdb } from "../hooks/useTmdb";
 import MediaCard from "../components/ui/MediaCard";
 import { GridSkeleton } from "../components/ui/Skeletons";
 
 export default function SearchPage() {
-  const { page: appPage, navigate, accent } = useApp();
-  const query = appPage.params?.query || "";
+  const { navigate, accent } = useApp();
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
   const accentColor = accent === "orange" ? "#f5a623" : accent === "blue" ? "#2563eb" : accent === "purple" ? "#7c3aed" : "#e50914";
 
   const [results, setResults] = useState({ movies: [], tv: [], anime: [] });

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { fetchTmdb } from "../hooks/useTmdb";
 import { MODE_LANGUAGES } from "../config/tmdb";
@@ -12,8 +13,10 @@ const SORT_OPTS = [
 ];
 
 export default function GenrePage() {
-  const { page: appPage, navigate, mode, accent } = useApp();
-  const { genreId, genreName } = appPage.params || {};
+  const { navigate, mode, accent } = useApp();
+  const { genreId } = useParams();
+  const [searchParams] = useSearchParams();
+  const genreName = searchParams.get("name") || "Genre";
   const accentColor = accent === "orange" ? "#f5a623" : accent === "blue" ? "#2563eb" : accent === "purple" ? "#7c3aed" : "#e50914";
   const defaultLang = MODE_LANGUAGES[mode];
 

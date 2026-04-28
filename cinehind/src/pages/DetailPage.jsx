@@ -160,7 +160,7 @@ export default function DetailPage() {
         )}
 
         {/* Info overlay — bottom left */}
-        <div className="absolute bottom-0 left-0 px-6 md:px-12 pb-28 z-10" style={{ maxWidth: "min(55vw, 620px)" }}>
+        <div className="absolute bottom-0 left-0 px-6 md:px-12 pb-10 md:pb-12 z-10" style={{ width: "100%", maxWidth: "min(calc(100vw - 190px), 620px)" }}>
           {/* Type badge */}
           <span
             className="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold mb-3"
@@ -212,17 +212,6 @@ export default function DetailPage() {
             {overview}
           </p>
 
-          {/* Director & Cast */}
-          {director && (
-            <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>
-              Director: <span className="font-semibold text-white">{director.name}</span>
-            </p>
-          )}
-          {cast.length > 0 && (
-            <div className="flex gap-3 mb-4">
-              {cast.map((p) => <CastCircle key={p.id} person={p} />)}
-            </div>
-          )}
         </div>
 
         {/* Play button — bottom right */}
@@ -277,6 +266,22 @@ export default function DetailPage() {
           </button>
         </div>
       </div>
+
+      {/* ── DIRECTOR & CAST SECTION ──────────────────────── */}
+      {(director || cast.length > 0) && (
+        <div className="px-6 md:px-12 py-6" style={{ background: "var(--bg)" }}>
+          {director && (
+            <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
+              Director: <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{director.name}</span>
+            </p>
+          )}
+          {cast.length > 0 && (
+            <div className="flex gap-4 overflow-x-auto scroll-row pb-2">
+              {cast.map((p) => <CastCircle key={p.id} person={p} />)}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── EPISODE LIST (TV only) ───────────────────────── */}
       {type === "tv" && showEpisodes && episodes.length > 0 && (

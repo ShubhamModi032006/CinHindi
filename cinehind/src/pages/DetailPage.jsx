@@ -43,6 +43,7 @@ export default function DetailPage() {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [episodes, setEpisodes] = useState([]);
   const [showEpisodes, setShowEpisodes] = useState(false);
+  const [showFullOverview, setShowFullOverview] = useState(false);
   const iframeRef = useRef(null);
 
   useEffect(() => {
@@ -200,14 +201,16 @@ export default function DetailPage() {
 
           {/* Overview */}
           <p
-            className="text-sm leading-relaxed mb-3"
+            onClick={() => setShowFullOverview(!showFullOverview)}
+            className="text-sm leading-relaxed mb-3 cursor-pointer transition-all"
             style={{
               color: "rgba(255,255,255,0.8)",
-              display: "-webkit-box",
-              WebkitLineClamp: 3,
+              display: showFullOverview ? "block" : "-webkit-box",
+              WebkitLineClamp: showFullOverview ? "unset" : 3,
               WebkitBoxOrient: "vertical",
               overflow: "hidden",
             }}
+            title={showFullOverview ? "Show less" : "Read more"}
           >
             {overview}
           </p>

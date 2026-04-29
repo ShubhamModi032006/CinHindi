@@ -49,6 +49,10 @@ export default function Navbar() {
   const handleSearch = (val) => {
     setSearchVal(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (val.trim().length === 0) {
+      debounceRef.current = setTimeout(() => navigate("search", { query: "" }), 400);
+      return;
+    }
     if (val.trim().length < 2) return;
     debounceRef.current = setTimeout(() => navigate("search", { query: val.trim() }), 400);
   };

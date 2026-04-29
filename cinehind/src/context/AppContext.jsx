@@ -153,7 +153,8 @@ export function AppProvider({ children }) {
     else if (name === "settings") path = "/settings";
     else if (name === "search") {
       path = `/search`;
-      if (params.q) path += `?q=${encodeURIComponent(params.q)}`;
+      const query = params.q || params.query;
+      if (query) path += `?q=${encodeURIComponent(query)}`;
     }
     else if (name === "genre") {
       path = `/genre/${params.genreId}`;

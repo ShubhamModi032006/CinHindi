@@ -14,13 +14,36 @@ export default function SearchPage() {
   const [results, setResults] = useState({ movies: [], tv: [], anime: [] });
   const [loading, setLoading] = useState(false);
   const [trending, setTrending] = useState([]);
+  const [relatedItems, setRelatedItems] = useState({ title: "", items: [] });
 
   // Fetch trending for empty state
   useEffect(() => {
     fetchTmdb("/trending/all/week", { page: 1 })
-      .then((d) => setTrending(d.results?.slice(0, 10) || []))
+      .then((d) => setTrending(d.results?.slice(0, 15) || []))
       .catch(() => {});
   }, []);
+
+  // Fetch related items for empty state
+  useEffect(() => {
+    if (!query.trim()) {
+      const stored = sessionStorage.getItem("last_search_top_item");
+      if (stored) {
+        try {
+          const topItem = JSON.parse(stored);
+          fetchTmdb(`/${topItem.type}/${topItem.id}/recommendations`, { page: 1 })
+            .then(d => {
+              const recs = d.results || [];
+              const hindi = recs.filter(r => r.original_language === "hi" || (r.origin_country && r.origin_country.includes("IN")));
+              const others = recs.filter(r => r.original_language !== "hi" && !(r.origin_country && r.origin_country.includes("IN")));
+              const finalRecs = [...hindi, ...others].slice(0, 5);
+              if (finalRecs.length > 0) {
+                setRelatedItems({ title: topItem.title, items: finalRecs });
+              }
+            }).catch(() => {});
+        } catch {}
+      }
+    }
+  }, [query]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -34,7 +57,19 @@ export default function SearchPage() {
         const movies = all.filter((r) => r.media_type === "movie");
         const tv = all.filter((r) => r.media_type === "tv" && !r.genre_ids?.includes(16));
         const anime = all.filter((r) => r.media_type === "tv" && r.genre_ids?.includes(16));
+        
         setResults({ movies, tv, anime });
+        
+        const topItem = all[0];
+        if (topItem) {
+          const type = topItem.media_type || (topItem.title ? "movie" : "tv");
+          sessionStorage.setItem("last_search_top_item", JSON.stringify({ 
+            id: topItem.id, 
+            type, 
+            title: topItem.title || topItem.name 
+          }));
+        }
+        
         setLoading(false);
       })
       .catch(() => {
@@ -64,14 +99,31 @@ export default function SearchPage() {
       )}
 
       {!loading && !query && (
-        <div>
-          <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-secondary)" }}>🔥 Trending Right Now</h2>
-          <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
-            {trending.map((item, i) => (
-              <div key={item.id} className="card-anim" style={{ animationDelay: `${i * 40}ms` }}>
-                <MediaCard item={item} index={i} type={item.media_type || "movie"} width="100%" />
+        <div className="flex flex-col gap-8">
+          {relatedItems.items.length > 0 && (
+            <div>
+              <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-secondary)" }}>
+                ✨ Because you searched for "{relatedItems.title}"
+              </h2>
+              <div className="flex gap-4 scroll-row snap-x pb-2" style={{ scrollSnapType: "x mandatory" }}>
+                {relatedItems.items.map((item, i) => (
+                  <div key={item.id} className="snap-start shrink-0 card-anim" style={{ width: 150, animationDelay: `${i * 40}ms` }}>
+                    <MediaCard item={item} index={i} type={item.media_type || (item.title ? "movie" : "tv")} width="100%" />
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
+
+          <div>
+            <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-secondary)" }}>🔥 Trending Right Now</h2>
+            <div className="flex gap-4 scroll-row snap-x pb-2" style={{ scrollSnapType: "x mandatory" }}>
+              {trending.map((item, i) => (
+                <div key={item.id} className="snap-start shrink-0 card-anim" style={{ width: 150, animationDelay: `${i * 40}ms` }}>
+                  <MediaCard item={item} index={i} type={item.media_type || "movie"} width="100%" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

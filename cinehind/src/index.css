@@ -213,3 +213,131 @@ iframe {
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+
+/* ── Watch in Your Language Section ─────────────────────────── */
+.wil-section {
+  padding: 0 0 32px;
+}
+.wil-header {
+  display: flex;
+  align-items: center;
+  padding: 0 1rem 12px;
+}
+@media (min-width: 768px) {
+  .wil-header { padding: 0 1.5rem 12px; }
+}
+.wil-title {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+@media (min-width: 768px) {
+  .wil-title { font-size: 1.125rem; }
+}
+
+.wil-row {
+  display: flex;
+  gap: 14px;
+  padding: 8px 1rem 20px;
+}
+@media (min-width: 768px) {
+  .wil-row { padding: 8px 1.5rem 20px; }
+}
+
+/* ── Individual Language Card ───────────────────────────────── */
+.lang-card {
+  position: relative;
+  flex-shrink: 0;
+  width: 200px;
+  height: 130px;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  background: transparent;
+  padding: 0;
+}
+.lang-card:hover {
+  transform: scale(1.04) translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 2px var(--glow, #fff), 0 0 24px color-mix(in srgb, var(--glow, #fff) 50%, transparent);
+}
+
+.lang-card__bg {
+  position: absolute;
+  inset: 0;
+  background: var(--grad);
+  z-index: 0;
+}
+
+/* Poster stack */
+.lang-card__posters {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+.lang-card__poster {
+  position: absolute;
+  bottom: 0;
+  width: 72px;
+  height: 108px;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.6);
+  transition: transform 0.3s ease;
+}
+/* Stack the 3 posters with offsets */
+.lang-card__poster:nth-child(1),
+.lang-card__poster[style*="--i: 0"] { right: 8px;  z-index: 3; }
+.lang-card__poster:nth-child(2),
+.lang-card__poster[style*="--i: 1"] { right: 56px; z-index: 2; opacity: 0.85; }
+.lang-card__poster:nth-child(3),
+.lang-card__poster[style*="--i: 2"] { right: 100px; z-index: 1; opacity: 0.65; }
+
+.lang-card:hover .lang-card__poster:nth-child(1) { transform: translateY(-6px) rotate(2deg); }
+.lang-card:hover .lang-card__poster:nth-child(2) { transform: translateY(-3px) rotate(-2deg); }
+.lang-card:hover .lang-card__poster:nth-child(3) { transform: translateY(-1px) rotate(1deg); }
+
+/* Skeleton placeholders same size as posters */
+.lang-card__poster.skeleton {
+  width: 72px;
+  height: 108px;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Label overlay at bottom */
+.lang-card__label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+  padding: 24px 10px 8px;
+  text-align: left;
+}
+.lang-card__label span {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+}
+
+/* Shine sweep on hover */
+.lang-card__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.07) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+  pointer-events: none;
+}
+.lang-card:hover .lang-card__shine {
+  transform: translateX(100%);
+}

@@ -6,6 +6,7 @@ import HeroSection from "../components/home/HeroSection";
 import ContinueWatchingRow from "../components/home/ContinueWatchingRow";
 import MediaRow from "../components/layout/MediaRow";
 import ProviderSection from "../components/home/ProviderSection";
+import WatchInLanguageSection from "../components/home/WatchInLanguageSection";
 
 export default function HomePage() {
   const { mode, navigate, activeProvider, watchHistory } = useApp();
@@ -127,6 +128,9 @@ export default function HomePage() {
 
         {/* Provider section */}
         <ProviderSection />
+
+        {/* Watch in Your Language */}
+        <WatchInLanguageSection />
 
         {/* Personalized Suggestions based on history */}
         {suggestions.data.length > 0 && (

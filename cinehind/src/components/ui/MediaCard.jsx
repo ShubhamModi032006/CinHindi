@@ -23,7 +23,7 @@ function FilmPlaceholder() {
   );
 }
 
-export default function MediaCard({ item, index = 0, type = "movie", width = 160 }) {
+export default function MediaCard({ item, index = 0, type = "movie", width = 160, onDismiss }) {
   const { navigate, toggleWatchLater, isInWatchLater, accent } = useApp();
   const [hovered, setHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -62,6 +62,18 @@ export default function MediaCard({ item, index = 0, type = "movie", width = 160
     e.stopPropagation();
     navigate("detail", { id, type: itemType });
   }, [id, itemType, navigate]);
+
+  const handleDismiss = useCallback((e) => {
+    e.stopPropagation();
+    try {
+      const dismissed = JSON.parse(localStorage.getItem("cinhindi_dismissed")) || [];
+      if (!dismissed.includes(id)) {
+        dismissed.push(id);
+        localStorage.setItem("cinhindi_dismissed", JSON.stringify(dismissed));
+      }
+    } catch { /* skip */ }
+    if (onDismiss) onDismiss(id);
+  }, [id, onDismiss]);
 
   // When width is a % string (grid mode), use CSS aspect-ratio instead of fixed px height
   const isPercentWidth = typeof width === "string";
@@ -163,6 +175,25 @@ export default function MediaCard({ item, index = 0, type = "movie", width = 160
               Info
             </button>
           </div>
+          {/* Not Interested — only shown when onDismiss handler is provided */}
+          {onDismiss && (
+            <button
+              onClick={handleDismiss}
+              className="flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-1 transition-all hover:scale-105"
+              style={{
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                color: "rgba(255,255,255,0.6)",
+                backdropFilter: "blur(4px)",
+              }}
+              title="Not Interested"
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              Not Interested
+            </button>
+          )}
         </div>
       </div>
 

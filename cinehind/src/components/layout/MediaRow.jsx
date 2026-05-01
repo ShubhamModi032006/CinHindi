@@ -1,9 +1,25 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import MediaCard from "../ui/MediaCard";
 import { CardSkeleton } from "../ui/Skeletons";
 
-export default function MediaRow({ title, items = [], loading = false, type = "movie", cardWidth = 160, className = "" }) {
+export default function MediaRow({
+  title,
+  items = [],
+  loading = false,
+  type = "movie",
+  cardWidth = 160,
+  className = "",
+  dismissable = false,
+}) {
   const scrollRef = useRef(null);
+
+  // Local copy of items so dismiss can remove cards instantly
+  const [localItems, setLocalItems] = useState(items);
+  useEffect(() => { setLocalItems(items); }, [items]);
+
+  const handleDismiss = (id) => {
+    setLocalItems((prev) => prev.filter((item) => item.id !== id));
+  };
 
   const scroll = (dir) => {
     if (!scrollRef.current) return;
@@ -36,9 +52,15 @@ export default function MediaRow({ title, items = [], loading = false, type = "m
         <div ref={scrollRef} className="scroll-row flex gap-3 px-4 md:px-6 pb-2">
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
-            : items.map((item, i) => (
+            : localItems.map((item, i) => (
               <div key={`${item.id}-${i}`} className="card-anim" style={{ animationDelay: `${i * 50}ms` }}>
-                <MediaCard item={item} index={i} type={type} width={cardWidth} />
+                <MediaCard
+                  item={item}
+                  index={i}
+                  type={type}
+                  width={cardWidth}
+                  onDismiss={dismissable ? handleDismiss : undefined}
+                />
               </div>
             ))
           }

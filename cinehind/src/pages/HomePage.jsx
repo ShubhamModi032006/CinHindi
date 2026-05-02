@@ -15,9 +15,11 @@ const GENRE_NAME_MAP = {
   80: "Crime", 99: "Documentary", 18: "Drama", 10751: "Family",
   14: "Fantasy", 36: "History", 27: "Horror", 10402: "Music",
   9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 53: "Thriller",
-  10752: "War", 37: "Western", 10759: "Action & Adventure",
-  10762: "Kids", 10763: "News", 10764: "Reality", 10765: "Sci-Fi & Fantasy",
-  10766: "Soap", 10767: "Talk", 10768: "War & Politics",
+  10752: "War", 37: "Western", 10770: "TV Movie",
+  10759: "Action & Adventure", 10762: "Kids", 10763: "News",
+  10764: "Reality", 10765: "Sci-Fi & Fantasy", 10766: "Soap",
+  10767: "Talk", 10768: "War & Politics", 10756: "Family",
+  10383: "Comedy",
 };
 
 // ── Language code → display name ─────────────────────────────
@@ -90,9 +92,9 @@ export default function HomePage() {
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
     const trendingDate = threeMonthsAgo.toISOString().split("T")[0];
 
-    const twoYearsAgo = new Date();
-    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-    const hitsDate = twoYearsAgo.toISOString().split("T")[0];
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    const hitsDate = oneYearAgo.toISOString().split("T")[0];
 
     setTrending({ data: [], loading: true });
     fetchTmdb("/discover/movie", movieParams({ sort_by: "popularity.desc", "primary_release_date.gte": trendingDate, page: 1 }))
@@ -225,7 +227,7 @@ export default function HomePage() {
       if (confidence === "medium" || confidence === "high") {
         const primaryGenre = topGenres[0];
         if (primaryGenre != null) {
-          setRecRowGenre({ data: [], loading: true, genreName: GENRE_NAME_MAP[primaryGenre] || "Picks" });
+          setRecRowGenre({ data: [], loading: true, genreName: GENRE_NAME_MAP[primaryGenre] || "Top Picks" });
           try {
             const genreParams = movieParams({ page: 1 });
             genreParams.with_genres             = primaryGenre;
@@ -242,7 +244,7 @@ export default function HomePage() {
             setRecRowGenre({
               data: scored,
               loading: false,
-              genreName: GENRE_NAME_MAP[primaryGenre] || "Picks",
+              genreName: GENRE_NAME_MAP[primaryGenre] || "Top Picks",
             });
           } catch {
             setRecRowGenre({ data: [], loading: false, genreName: "" });
@@ -254,30 +256,58 @@ export default function HomePage() {
         setRecRowGenre({ data: [], loading: false, genreName: "" });
       }
 
-      // ── Row 3: "Top Rated in [Language]" ───────────────────
-      if (confidence === "high") {
+      // ── Row 3: "Top Rated in [Language]" (medium+ confidence) ────
+      if (confidence === "medium" || confidence === "high") {
         setRecRowLanguage({ data: [], loading: true, language: LANGUAGE_NAME_MAP[topLanguage] || topLanguage });
         try {
-          const langParams = {
+          const baseParams = {
             watch_region: "IN",
             sort_by: "vote_average.desc",
+          };
+          if (activeProvider?.watchId) baseParams.with_watch_providers = activeProvider.watchId;
+
+          // Helper: fetch 2 pages with given params and score results
+          const fetchAndScore = async (params) => {
+            const [p1, p2] = await Promise.all([
+              fetchTmdb("/discover/movie", { ...baseParams, ...params, page: 1 }).catch(() => ({ results: [] })),
+              fetchTmdb("/discover/movie", { ...baseParams, ...params, page: 2 }).catch(() => ({ results: [] })),
+            ]);
+            return scoreResults(
+              dedupe([...(p1.results || []), ...(p2.results || [])]),
+              profile
+            ).slice(0, 15);
+          };
+
+          // Attempt 1 — strict: topLanguage + avgRating + vote_count 100
+          let scored = await fetchAndScore({
             with_original_language: topLanguage,
             "vote_average.gte": avgRating,
             "vote_count.gte": 100,
-          };
-          if (activeProvider?.watchId) langParams.with_watch_providers = activeProvider.watchId;
+          });
+          let displayLang = LANGUAGE_NAME_MAP[topLanguage] || topLanguage;
 
-          const [p1, p2] = await Promise.all([
-            fetchTmdb("/discover/movie", { ...langParams, page: 1 }).catch(() => ({ results: [] })),
-            fetchTmdb("/discover/movie", { ...langParams, page: 2 }).catch(() => ({ results: [] })),
-          ]);
+          // Attempt 2 — relaxed: same language, drop rating floor, lower vote count
+          if (scored.length === 0) {
+            scored = await fetchAndScore({
+              with_original_language: topLanguage,
+              "vote_count.gte": 30,
+            });
+          }
 
-          const merged = dedupe([...(p1.results || []), ...(p2.results || [])]);
-          const scored = scoreResults(merged, profile).slice(0, 15);
+          // Attempt 3 — language fallback: niche lang → fallback to Hindi
+          const isNicheLanguage = !["hi", "en"].includes(topLanguage);
+          if (scored.length === 0 && isNicheLanguage) {
+            scored = await fetchAndScore({
+              with_original_language: "hi",
+              "vote_count.gte": 30,
+            });
+            displayLang = LANGUAGE_NAME_MAP["hi"]; // update title to Hindi
+          }
+
           setRecRowLanguage({
             data: scored,
             loading: false,
-            language: LANGUAGE_NAME_MAP[topLanguage] || topLanguage,
+            language: displayLang,
           });
         } catch {
           setRecRowLanguage({ data: [], loading: false, language: "" });

@@ -8,6 +8,11 @@ import MediaRow from "../components/layout/MediaRow";
 import ProviderSection from "../components/home/ProviderSection";
 import WatchInLanguageSection from "../components/home/WatchInLanguageSection";
 import { buildTasteProfile, scoreResults } from "../utils/tasteProfile";
+import {
+  getTop10WithFallback,
+  getRecentlyAddedWithFallback,
+  JW_PROVIDER_MAP,
+} from "../utils/justwatch";
 
 // ── Genre ID → display name ───────────────────────────────────
 const GENRE_NAME_MAP = {
@@ -49,6 +54,10 @@ export default function HomePage() {
 
   // ── New This Week row ─────────────────────────────────────────
   const [newThisWeek, setNewThisWeek] = useState({ data: [], loading: true });
+
+  // ── JustWatch-powered rows ───────────────────────────────────
+  const [top10India,      setTop10India]      = useState({ data: [], loading: true });
+  const [recentlyAdded,   setRecentlyAdded]   = useState({ data: [], loading: true });
 
   // ── Recommendation rows ──────────────────────────────────────
   const [tasteProfile,    setTasteProfile]    = useState(null);
@@ -111,6 +120,32 @@ export default function HomePage() {
       .then((d) => setSeries({ data: d.results || [], loading: false }))
       .catch(() => setSeries({ data: [], loading: false }));
   }, [langs, mode, activeProvider?.id]);
+
+  // ─────────────────────────────────────────────────────────────
+  // JustWatch: Top 10 & Recently Added
+  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const load = async () => {
+      setTop10India({ data: [], loading: true });
+      setRecentlyAdded({ data: [], loading: true });
+
+      // Get JustWatch provider ID if a provider is active
+      const jwProviderId = activeProvider
+        ? JW_PROVIDER_MAP[activeProvider.id] || null
+        : null;
+
+      // Fetch both in parallel
+      const [top10Result, recentResult] = await Promise.all([
+        getTop10WithFallback(fetchTmdb, jwProviderId),
+        getRecentlyAddedWithFallback(fetchTmdb, jwProviderId),
+      ]);
+
+      setTop10India({ data: top10Result.data, loading: false });
+      setRecentlyAdded({ data: recentResult.data, loading: false });
+    };
+
+    load();
+  }, [activeProvider, mode]);
 
   // ─────────────────────────────────────────────────────────────
   // New This Week row (movies + TV blended, last 14 days)
@@ -393,6 +428,27 @@ export default function HomePage() {
             title="🆕 New This Week"
             items={newThisWeek.data}
             loading={newThisWeek.loading}
+            type="movie"
+          />
+        )}
+
+        {/* 🏆 Top 10 in India / Top 10 on [Provider] */}
+        {top10India.data.length > 0 && (
+          <MediaRow
+            title={activeProvider ? `🏆 Top 10 on ${activeProvider.label}` : "🏆 Top 10 in India"}
+            items={top10India.data}
+            loading={top10India.loading}
+            type="movie"
+            showRank={true}
+          />
+        )}
+
+        {/* 🆕 Recently Added */}
+        {recentlyAdded.data.length > 0 && (
+          <MediaRow
+            title={activeProvider ? `🆕 New on ${activeProvider.label}` : "🆕 Recently Added"}
+            items={recentlyAdded.data}
+            loading={recentlyAdded.loading}
             type="movie"
           />
         )}

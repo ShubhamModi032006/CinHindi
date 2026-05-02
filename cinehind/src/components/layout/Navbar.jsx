@@ -275,11 +275,35 @@ export default function Navbar() {
             {/* Mobile mode toggle */}
             <button
               onClick={() => { cycleMode(); setMobileOpen(false); }}
-              className="w-full text-left px-6 py-3 text-sm font-bold"
-              style={{ color: accentColor }}
+              className="w-full text-left px-6 py-3 text-sm font-bold border-b"
+              style={{ color: accentColor, borderColor: "var(--border)" }}
             >
               Content: {MODE_LABELS[mode]} → Switch
             </button>
+            {/* Mobile auth button */}
+            {user ? (
+              <button
+                onClick={() => { logout(); setMobileOpen(false); }}
+                className="w-full text-left px-6 py-3 text-sm font-bold flex items-center gap-2"
+                style={{ color: "var(--text-primary)" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout ({user.username})
+              </button>
+            ) : (
+              <button
+                onClick={() => { setShowAuth(true); setMobileOpen(false); }}
+                className="w-full text-left px-6 py-3 text-sm font-bold flex items-center gap-2"
+                style={{ color: accentColor }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                Sign In
+              </button>
+            )}
           </div>
         )}
       </nav>

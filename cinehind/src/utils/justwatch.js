@@ -104,8 +104,19 @@ const callJustWatch = async (query, variables) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
   });
+
+  // Guard against non-JSON responses (e.g. Netlify 404 HTML page)
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error("JustWatch proxy returned non-JSON response");
+  }
+
+  if (!response.ok) {
+    throw new Error(`JustWatch proxy returned ${response.status}`);
+  }
+
   const data = await response.json();
-  if (data.fallback) throw new Error("JustWatch unavailable");
+  if (data.fallback || data.error) throw new Error(data.error || "JustWatch unavailable");
   return data;
 };
 
@@ -214,12 +225,17 @@ export const getTop10WithFallback = async (fetchTmdb, providerJwId = null) => {
     throw new Error("Too few JustWatch results");
   } catch {
     // Silent fallback to TMDB trending
-    const params = { region: "IN", watch_region: "IN" };
-    const tmdbData = await fetchTmdb("/trending/all/day", params);
-    return {
-      data: (tmdbData.results || []).slice(0, 10),
-      source: "tmdb",
-    };
+    try {
+      const params = { region: "IN", watch_region: "IN" };
+      const tmdbData = await fetchTmdb("/trending/all/day", params);
+      return {
+        data: (tmdbData.results || []).slice(0, 10),
+        source: "tmdb",
+      };
+    } catch {
+      // Both sources failed — return empty gracefully
+      return { data: [], source: "none" };
+    }
   }
 };
 
@@ -233,20 +249,25 @@ export const getRecentlyAddedWithFallback = async (
     throw new Error("Too few JustWatch results");
   } catch {
     // Silent fallback to TMDB new releases
-    const today = new Date();
-    const twoWeeksAgo = new Date(today - 14 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0];
-    const params = {
-      watch_region: "IN",
-      sort_by: "popularity.desc",
-      "primary_release_date.gte": twoWeeksAgo,
-      "vote_count.gte": 10,
-    };
-    const tmdbData = await fetchTmdb("/discover/movie", params);
-    return {
-      data: (tmdbData.results || []).slice(0, 20),
-      source: "tmdb",
-    };
+    try {
+      const today = new Date();
+      const twoWeeksAgo = new Date(today - 14 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
+      const params = {
+        watch_region: "IN",
+        sort_by: "popularity.desc",
+        "primary_release_date.gte": twoWeeksAgo,
+        "vote_count.gte": 10,
+      };
+      const tmdbData = await fetchTmdb("/discover/movie", params);
+      return {
+        data: (tmdbData.results || []).slice(0, 20),
+        source: "tmdb",
+      };
+    } catch {
+      // Both sources failed — return empty gracefully
+      return { data: [], source: "none" };
+    }
   }
 };

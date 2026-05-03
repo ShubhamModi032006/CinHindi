@@ -129,19 +129,25 @@ export default function HomePage() {
       setTop10India({ data: [], loading: true });
       setRecentlyAdded({ data: [], loading: true });
 
-      // Get JustWatch provider ID if a provider is active
-      const jwProviderId = activeProvider
-        ? JW_PROVIDER_MAP[activeProvider.id] || null
-        : null;
+      try {
+        // Get JustWatch provider ID if a provider is active
+        const jwProviderId = activeProvider
+          ? JW_PROVIDER_MAP[activeProvider.id] || null
+          : null;
 
-      // Fetch both in parallel
-      const [top10Result, recentResult] = await Promise.all([
-        getTop10WithFallback(fetchTmdb, jwProviderId),
-        getRecentlyAddedWithFallback(fetchTmdb, jwProviderId),
-      ]);
+        // Fetch both in parallel
+        const [top10Result, recentResult] = await Promise.all([
+          getTop10WithFallback(fetchTmdb, jwProviderId),
+          getRecentlyAddedWithFallback(fetchTmdb, jwProviderId),
+        ]);
 
-      setTop10India({ data: top10Result.data, loading: false });
-      setRecentlyAdded({ data: recentResult.data, loading: false });
+        setTop10India({ data: top10Result.data, loading: false });
+        setRecentlyAdded({ data: recentResult.data, loading: false });
+      } catch (err) {
+        console.warn("JustWatch + TMDB fallback both failed:", err);
+        setTop10India({ data: [], loading: false });
+        setRecentlyAdded({ data: [], loading: false });
+      }
     };
 
     load();

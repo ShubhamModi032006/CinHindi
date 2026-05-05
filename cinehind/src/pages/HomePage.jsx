@@ -137,8 +137,8 @@ export default function HomePage() {
 
         // Fetch both in parallel
         const [top10Result, recentResult] = await Promise.all([
-          getTop10WithFallback(fetchTmdb, jwProviderId),
-          getRecentlyAddedWithFallback(fetchTmdb, jwProviderId),
+          getTop10WithFallback(fetchTmdb, jwProviderId, langs),
+          getRecentlyAddedWithFallback(fetchTmdb, jwProviderId, langs),
         ]);
 
         setTop10India({ data: top10Result.data, loading: false });

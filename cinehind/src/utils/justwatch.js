@@ -145,7 +145,7 @@ export const resolveImdbToTmdb = async (imdbIds, fetchTmdb) => {
 
 // ─── Main exported fetchers ──────────────────────────────────
 
-export const fetchJwTop10 = async (fetchTmdb, providerJwId = null) => {
+export const fetchJwTop10 = async (fetchTmdb, providerJwId = null, langs = null) => {
   const filter = {
     objectTypes: ["MOVIE", "SHOW"],
   };
@@ -158,7 +158,7 @@ export const fetchJwTop10 = async (fetchTmdb, providerJwId = null) => {
   const variables = {
     country: "IN",
     language: "hi",
-    first: 20,
+    first: 40, // Increased to get enough results after filtering
     filter,
   };
 
@@ -175,10 +175,15 @@ export const fetchJwTop10 = async (fetchTmdb, providerJwId = null) => {
 
   // Build final array in JustWatch ranking order
   const results = [];
+  const allowedLangs = langs ? langs.split("|") : null;
+
   for (const edge of edges) {
     const imdbId = edge.node?.content?.externalIds?.imdbId;
     const tmdbItem = tmdbMap[imdbId];
     if (tmdbItem) {
+      if (allowedLangs && !allowedLangs.includes(tmdbItem.original_language)) {
+        continue;
+      }
       results.push({
         ...tmdbItem,
         jwRank: results.length + 1, // 1-based ranking from JustWatch
@@ -190,11 +195,11 @@ export const fetchJwTop10 = async (fetchTmdb, providerJwId = null) => {
   return results;
 };
 
-export const fetchJwRecentlyAdded = async (fetchTmdb, providerJwId = null) => {
+export const fetchJwRecentlyAdded = async (fetchTmdb, providerJwId = null, langs = null) => {
   const filter = { objectTypes: ["MOVIE", "SHOW"] };
   if (providerJwId) filter.packages = [providerJwId];
 
-  const variables = { country: "IN", language: "hi", first: 30, filter };
+  const variables = { country: "IN", language: "hi", first: 40, filter };
 
   const data = await callJustWatch(NEW_TITLES_QUERY, variables);
   const edges = data?.data?.newTitles?.edges || [];
@@ -206,10 +211,17 @@ export const fetchJwRecentlyAdded = async (fetchTmdb, providerJwId = null) => {
   const tmdbMap = await resolveImdbToTmdb(imdbIds, fetchTmdb);
 
   const results = [];
+  const allowedLangs = langs ? langs.split("|") : null;
+
   for (const edge of edges) {
     const imdbId = edge.node?.content?.externalIds?.imdbId;
     const tmdbItem = tmdbMap[imdbId];
-    if (tmdbItem) results.push(tmdbItem);
+    if (tmdbItem) {
+      if (allowedLangs && !allowedLangs.includes(tmdbItem.original_language)) {
+        continue;
+      }
+      results.push(tmdbItem);
+    }
     if (results.length >= 20) break;
   }
 
@@ -218,16 +230,17 @@ export const fetchJwRecentlyAdded = async (fetchTmdb, providerJwId = null) => {
 
 // ─── Wrappers with silent TMDB fallback ──────────────────────
 
-export const getTop10WithFallback = async (fetchTmdb, providerJwId = null) => {
+export const getTop10WithFallback = async (fetchTmdb, providerJwId = null, langs = null) => {
   try {
-    const jwResults = await fetchJwTop10(fetchTmdb, providerJwId);
+    const jwResults = await fetchJwTop10(fetchTmdb, providerJwId, langs);
     if (jwResults.length >= 3) return { data: jwResults, source: "justwatch" };
     throw new Error("Too few JustWatch results");
   } catch {
     // Silent fallback to TMDB trending
     try {
       const params = { region: "IN", watch_region: "IN" };
-      const tmdbData = await fetchTmdb("/trending/all/day", params);
+      if (langs) params.with_original_language = langs;
+      const tmdbData = await fetchTmdb("/discover/movie", { ...params, sort_by: "popularity.desc" });
       return {
         data: (tmdbData.results || []).slice(0, 10),
         source: "tmdb",
@@ -241,10 +254,11 @@ export const getTop10WithFallback = async (fetchTmdb, providerJwId = null) => {
 
 export const getRecentlyAddedWithFallback = async (
   fetchTmdb,
-  providerJwId = null
+  providerJwId = null,
+  langs = null
 ) => {
   try {
-    const jwResults = await fetchJwRecentlyAdded(fetchTmdb, providerJwId);
+    const jwResults = await fetchJwRecentlyAdded(fetchTmdb, providerJwId, langs);
     if (jwResults.length >= 3) return { data: jwResults, source: "justwatch" };
     throw new Error("Too few JustWatch results");
   } catch {
@@ -260,6 +274,7 @@ export const getRecentlyAddedWithFallback = async (
         "primary_release_date.gte": twoWeeksAgo,
         "vote_count.gte": 10,
       };
+      if (langs) params.with_original_language = langs;
       const tmdbData = await fetchTmdb("/discover/movie", params);
       return {
         data: (tmdbData.results || []).slice(0, 20),

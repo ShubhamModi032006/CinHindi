@@ -54,35 +54,34 @@ export default function MediaRow({
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
             : localItems.map((item, i) => (
-              <div key={`${item.id}-${i}`} className="card-anim" style={{ animationDelay: `${i * 50}ms`, position: "relative" }}>
-                <MediaCard
-                  item={item}
-                  index={i}
-                  type={type}
-                  width={cardWidth}
-                  onDismiss={dismissable ? handleDismiss : undefined}
-                />
+              <div key={`${item.id}-${i}`} className="card-anim flex items-center shrink-0" style={{ animationDelay: `${i * 50}ms`, position: "relative" }}>
                 {showRank && i < 10 && (
                   <span
+                    className="select-none"
                     style={{
-                      position: "absolute",
-                      bottom: -4,
-                      left: -6,
-                      fontSize: "4rem",
+                      fontSize: "8rem",
                       fontWeight: 900,
-                      lineHeight: 1,
-                      color: "white",
-                      textShadow: "2px 2px 8px rgba(0,0,0,0.9), -1px -1px 4px rgba(0,0,0,0.7)",
-                      WebkitTextStroke: "1.5px rgba(0,0,0,0.5)",
-                      pointerEvents: "none",
-                      userSelect: "none",
-                      zIndex: 5,
-                      fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                      lineHeight: 0.8,
+                      letterSpacing: "-0.05em",
+                      color: "black",
+                      WebkitTextStroke: "2px #555",
+                      marginRight: "-25px",
+                      zIndex: 0,
+                      fontFamily: "'Inter', sans-serif",
                     }}
                   >
                     {item.jwRank || i + 1}
                   </span>
                 )}
+                <div style={{ zIndex: 1, position: "relative" }}>
+                  <MediaCard
+                    item={item}
+                    index={i}
+                    type={type}
+                    width={cardWidth}
+                    onDismiss={dismissable ? handleDismiss : undefined}
+                  />
+                </div>
               </div>
             ))
           }

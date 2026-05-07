@@ -99,7 +99,7 @@ const NEW_TITLES_QUERY = `
 // ─── Core proxy caller ───────────────────────────────────────
 
 const callJustWatch = async (query, variables) => {
-  const response = await fetch("/.netlify/functions/justwatch", {
+  const response = await fetch("/api/justwatch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),

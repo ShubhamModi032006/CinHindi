@@ -3,26 +3,9 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { fetchTmdb } from "../hooks/useTmdb";
 import MediaCard from "../components/ui/MediaCard";
-
-// Player sources in priority order
-function getPlayerSources(id, type, season, episode) {
-  if (type === "movie") {
-    return [
-      `https://player.videasy.net/movie/${id}`,
-      `https://embed.screenscape.me/embed?tmdb=${id}&type=movie`,
-      `https://vidsrc.xyz/embed/movie/${id}`,
-      `https://vidlink.pro/movie/${id}`,
-    ];
-  }
-  return [
-    `https://player.videasy.net/tv/${id}/${season}/${episode}`,
-    `https://embed.screenscape.me/embed?tmdb=${id}&type=tv&s=${season}&e=${episode}`,
-    `https://vidsrc.xyz/embed/tv/${id}/${season}/${episode}`,
-    `https://vidlink.pro/tv/${id}/${season}/${episode}`,
-  ];
-}
-
-const SOURCE_LABELS = ["Videasy", "Screenscape", "Vidsrc", "Vidlink"];
+import PlayerControls from "../components/player/PlayerControls";
+import EpisodePanel from "../components/player/EpisodePanel";
+import { EMBED_SERVERS } from "../config/servers";
 
 export default function WatchPage() {
   const { navigate, saveContinueWatching, addToHistory, autoplay, accent } = useApp();
@@ -41,14 +24,28 @@ export default function WatchPage() {
   const [episodes, setEpisodes] = useState([]);
   const [recs, setRecs]       = useState([]);
   const [info, setInfo]       = useState(null);
-  const [sourceIdx, setSourceIdx] = useState(0);     // which player source
+  
+  const [activeServer, setActiveServer] = useState(() => {
+    const saved = localStorage.getItem("cinhindi_last_server");
+    if (saved) {
+      const server = EMBED_SERVERS.find(s => s.id === saved);
+      if (server) return server;
+    }
+    return EMBED_SERVERS[0];
+  });
+  
   const [playerLoading, setPlayerLoading] = useState(true);
-  const [nextCountdown, setNextCountdown] = useState(null);
-  const countdownRef = useRef(null);
   const loadTimerRef = useRef(null);
+  const [episodePanelOpen, setEpisodePanelOpen] = useState(false);
 
-  const sources = getPlayerSources(id, type, season, episode);
-  const embedUrl = sources[sourceIdx];
+  const embedUrl = type === "movie" 
+    ? activeServer.getMovieUrl(id) 
+    : activeServer.getTvUrl(id, season, episode);
+
+  const handleServerChange = (server) => {
+    setActiveServer(server);
+    localStorage.setItem("cinhindi_last_server", server.id);
+  };
 
   // Save to continue watching & history
   useEffect(() => {
@@ -97,35 +94,70 @@ export default function WatchPage() {
     setPlayerLoading(false);
   };
 
-  const tryNextSource = () => {
-    if (sourceIdx < sources.length - 1) {
-      setSourceIdx(sourceIdx + 1);
+  const handleCycleServer = () => {
+    const idx = EMBED_SERVERS.findIndex((s) => s.id === activeServer.id);
+    const nextIdx = (idx + 1) % EMBED_SERVERS.length;
+    handleServerChange(EMBED_SERVERS[nextIdx]);
+  };
+
+  const handleNextEpisode = () => {
+    if (type !== "tv") return;
+    const currentSeasonMeta = seasons.find(s => s.season_number === season);
+    const maxEps = currentSeasonMeta ? currentSeasonMeta.episode_count : episodes.length;
+
+    let nextEp = episode;
+    let nextSeason = season;
+
+    if (episode >= maxEps) {
+      nextSeason = season + 1;
+      nextEp = 1;
+    } else {
+      nextEp = episode + 1;
     }
+
+    const maxSeasons = Math.max(...seasons.map(s => s.season_number), 1);
+    if (nextSeason > maxSeasons) return; // last ep of last season
+
+    setSeason(nextSeason);
+    setEpisode(nextEp);
+    saveContinueWatching({ id, type, title, poster, season: nextSeason, episode: nextEp });
+    
+    searchParams.set("season", nextSeason);
+    searchParams.set("episode", nextEp);
+    navigate(`?${searchParams.toString()}`, { replace: true });
   };
 
-  // Autoplay next episode countdown
-  const startNextEpisodeCountdown = () => {
-    if (!autoplay || type !== "tv") return;
-    setNextCountdown(10);
-    countdownRef.current = setInterval(() => {
-      setNextCountdown((n) => {
-        if (n <= 1) {
-          clearInterval(countdownRef.current);
-          const nextEp = episode + 1;
-          setEpisode(nextEp);
-          setSourceIdx(0);
-          saveContinueWatching({ id, type, title, poster, season, episode: nextEp });
-          setNextCountdown(null);
-          return null;
-        }
-        return n - 1;
-      });
-    }, 1000);
+  const handlePrevEpisode = () => {
+    if (type !== "tv") return;
+    let prevEp = episode;
+    let prevSeason = season;
+
+    if (episode <= 1) {
+      if (season <= 1) return;
+      prevSeason = season - 1;
+      const prevSeasonMeta = seasons.find(s => s.season_number === prevSeason);
+      prevEp = prevSeasonMeta ? prevSeasonMeta.episode_count : 1;
+    } else {
+      prevEp = episode - 1;
+    }
+
+    setSeason(prevSeason);
+    setEpisode(prevEp);
+    saveContinueWatching({ id, type, title, poster, season: prevSeason, episode: prevEp });
+
+    searchParams.set("season", prevSeason);
+    searchParams.set("episode", prevEp);
+    navigate(`?${searchParams.toString()}`, { replace: true });
   };
 
-  const cancelCountdown = () => {
-    clearInterval(countdownRef.current);
-    setNextCountdown(null);
+  const handleSelectEpisode = (selectedSeason, selectedEpisode) => {
+    setSeason(selectedSeason);
+    setEpisode(selectedEpisode);
+    saveContinueWatching({ id, type, title, poster, season: selectedSeason, episode: selectedEpisode });
+    searchParams.set("season", selectedSeason);
+    searchParams.set("episode", selectedEpisode);
+    navigate(`?${searchParams.toString()}`, { replace: true });
+    setEpisodePanelOpen(false);
   };
 
   return (
@@ -153,66 +185,10 @@ export default function WatchPage() {
         {/* Player ~70% */}
         <div className="flex-1">
 
-          {/* Season/Episode selector */}
-          {type === "tv" && seasons.length > 0 && (
-            <div className="flex gap-3 mb-3 flex-wrap">
-              <select
-                value={season}
-                onChange={(e) => { setSeason(Number(e.target.value)); setEpisode(1); setSourceIdx(0); }}
-                className="px-4 py-2 rounded-full text-sm font-semibold"
-                style={{ background: "#111", border: "1px solid #333", color: "#fff" }}
-              >
-                {seasons.map((s) => (
-                  <option key={s.id} value={s.season_number} style={{ background: "#111" }}>
-                    Season {s.season_number}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={episode}
-                onChange={(e) => {
-                  const ep = Number(e.target.value);
-                  setEpisode(ep);
-                  setSourceIdx(0);
-                  saveContinueWatching({ id, type, title, poster, season, episode: ep });
-                }}
-                className="px-4 py-2 rounded-full text-sm font-semibold"
-                style={{ background: "#111", border: "1px solid #333", color: "#fff" }}
-              >
-                {episodes.map((ep) => (
-                  <option key={ep.id} value={ep.episode_number} style={{ background: "#111" }}>
-                    E{ep.episode_number}: {ep.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Player source switcher */}
-          <div className="flex gap-2 mb-3 flex-wrap">
-            {SOURCE_LABELS.map((label, i) => (
-              <button
-                key={i}
-                onClick={() => setSourceIdx(i)}
-                className="px-3 py-1 rounded-full text-xs font-semibold transition-all hover:scale-105"
-                style={{
-                  background: sourceIdx === i ? accentColor : "#1a1a1a",
-                  color: sourceIdx === i ? "white" : "#888",
-                  border: `1px solid ${sourceIdx === i ? accentColor : "#333"}`,
-                }}
-              >
-                {sourceIdx === i ? "▶ " : ""}{label}
-              </button>
-            ))}
-            <span className="text-xs self-center" style={{ color: "#555" }}>
-              If player is black, try another source →
-            </span>
-          </div>
-
           {/* Player wrapper */}
           <div
-            className="relative w-full"
-            style={{ aspectRatio: "16/9", background: "#0d0d0d", borderRadius: 12, overflow: "hidden" }}
+            className="player-container relative w-full group"
+            style={{ aspectRatio: "16/9", background: "#000", borderRadius: 12, overflow: "hidden" }}
           >
             {/* Loading spinner */}
             {playerLoading && (
@@ -222,52 +198,57 @@ export default function WatchPage() {
                     className="w-12 h-12 rounded-full border-2 animate-spin"
                     style={{ borderColor: `${accentColor} transparent transparent transparent` }}
                   />
-                  <p className="text-sm" style={{ color: "#888" }}>Loading {SOURCE_LABELS[sourceIdx]}...</p>
+                  <p className="text-sm" style={{ color: "#888" }}>Loading {activeServer.name}...</p>
                 </div>
               </div>
             )}
 
-            {/* Iframe — note: no allowFullScreen prop, fullscreen is in allow= */}
             <iframe
               key={embedUrl}
               src={embedUrl}
               title={`${title} Player`}
               className="w-full h-full"
-              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              allow="autoplay; fullscreen; picture-in-picture"
+              referrerPolicy="no-referrer"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               onLoad={handlePlayerLoad}
-              style={{ border: "none", borderRadius: 12 }}
+              style={{ width: "100%", height: "100%", border: "none" }}
             />
 
-            {/* Next episode countdown overlay */}
-            {nextCountdown !== null && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: "rgba(0,0,0,0.8)", zIndex: 3 }}>
-                <p className="text-lg font-bold text-white mb-2">Next episode in {nextCountdown}...</p>
-                <button
-                  onClick={cancelCountdown}
-                  className="px-5 py-2 rounded-full text-sm font-semibold"
-                  style={{ background: "#333", color: "#fff" }}
-                >
-                  Cancel
-                </button>
-              </div>
+            {episodePanelOpen && type === "tv" && (
+              <EpisodePanel
+                tmdbId={id}
+                currentSeason={season}
+                currentEpisode={episode}
+                totalSeasons={Math.max(...seasons.map(s => s.season_number), 1)}
+                onSelectEpisode={handleSelectEpisode}
+                onClose={() => setEpisodePanelOpen(false)}
+                accentColor={accentColor}
+              />
             )}
+
+            <PlayerControls
+              type={type}
+              runtime={info?.runtime || (info?.episode_run_time ? info.episode_run_time[0] : null)}
+              currentSeason={season}
+              currentEpisode={episode}
+              totalSeasons={Math.max(...seasons.map(s => s.season_number), 1)}
+              servers={EMBED_SERVERS}
+              activeServer={activeServer}
+              onServerChange={handleServerChange}
+              onNextEpisode={handleNextEpisode}
+              onToggleEpisodes={() => setEpisodePanelOpen((p) => !p)}
+              episodePanelOpen={episodePanelOpen}
+              accentColor={accentColor}
+            />
           </div>
 
           {/* Source error hint */}
           <div className="mt-2 flex items-center justify-between">
             <p className="text-xs" style={{ color: "#555" }}>
-              {SOURCE_LABELS[sourceIdx]} · {type === "tv" ? `S${season} E${episode}` : "Movie"}
+              {activeServer.name} · {type === "tv" ? `S${season} E${episode}` : "Movie"}
             </p>
-            {sourceIdx < sources.length - 1 && (
-              <button
-                onClick={tryNextSource}
-                className="text-xs font-semibold transition-all hover:scale-105"
-                style={{ color: accentColor }}
-              >
-                Player not working? Try {SOURCE_LABELS[sourceIdx + 1]} →
-              </button>
-            )}
           </div>
 
           {/* Info below player */}

@@ -3,8 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { fetchTmdb } from "../hooks/useTmdb";
 import MediaCard from "../components/ui/MediaCard";
-import PlayerControls from "../components/player/PlayerControls";
-import EpisodePanel from "../components/player/EpisodePanel";
+import PlayerOverlay from "../components/player/PlayerOverlay";
 import { EMBED_SERVERS } from "../config/servers";
 
 export default function WatchPage() {
@@ -35,8 +34,9 @@ export default function WatchPage() {
   });
   
   const [playerLoading, setPlayerLoading] = useState(true);
+  const [nextCountdown, setNextCountdown] = useState(null);
+  const countdownRef = useRef(null);
   const loadTimerRef = useRef(null);
-  const [episodePanelOpen, setEpisodePanelOpen] = useState(false);
 
   const embedUrl = type === "movie" 
     ? activeServer.getMovieUrl(id) 
@@ -82,10 +82,11 @@ export default function WatchPage() {
   // Reset loading when source or episode changes
   useEffect(() => {
     setPlayerLoading(true);
+    cancelCountdown();
     clearTimeout(loadTimerRef.current);
     loadTimerRef.current = setTimeout(() => {
       setPlayerLoading(false);
-    }, 5000); // Reduced to 5s so users aren't stuck waiting for a dead server
+    }, 5000); 
     return () => clearTimeout(loadTimerRef.current);
   }, [embedUrl]);
 
@@ -118,13 +119,7 @@ export default function WatchPage() {
     const maxSeasons = Math.max(...seasons.map(s => s.season_number), 1);
     if (nextSeason > maxSeasons) return; // last ep of last season
 
-    setSeason(nextSeason);
-    setEpisode(nextEp);
-    saveContinueWatching({ id, type, title, poster, season: nextSeason, episode: nextEp });
-    
-    searchParams.set("season", nextSeason);
-    searchParams.set("episode", nextEp);
-    navigate(`?${searchParams.toString()}`, { replace: true });
+    handleSelectEpisode(nextSeason, nextEp);
   };
 
   const handlePrevEpisode = () => {
@@ -141,13 +136,7 @@ export default function WatchPage() {
       prevEp = episode - 1;
     }
 
-    setSeason(prevSeason);
-    setEpisode(prevEp);
-    saveContinueWatching({ id, type, title, poster, season: prevSeason, episode: prevEp });
-
-    searchParams.set("season", prevSeason);
-    searchParams.set("episode", prevEp);
-    navigate(`?${searchParams.toString()}`, { replace: true });
+    handleSelectEpisode(prevSeason, prevEp);
   };
 
   const handleSelectEpisode = (selectedSeason, selectedEpisode) => {
@@ -157,7 +146,28 @@ export default function WatchPage() {
     searchParams.set("season", selectedSeason);
     searchParams.set("episode", selectedEpisode);
     navigate(`?${searchParams.toString()}`, { replace: true });
-    setEpisodePanelOpen(false);
+  };
+
+  // Autoplay next episode countdown
+  const startNextEpisodeCountdown = () => {
+    if (!autoplay || type !== "tv") return;
+    setNextCountdown(10);
+    countdownRef.current = setInterval(() => {
+      setNextCountdown((n) => {
+        if (n <= 1) {
+          clearInterval(countdownRef.current);
+          handleNextEpisode();
+          setNextCountdown(null);
+          return null;
+        }
+        return n - 1;
+      });
+    }, 1000);
+  };
+
+  const cancelCountdown = () => {
+    clearInterval(countdownRef.current);
+    setNextCountdown(null);
   };
 
   return (
@@ -183,12 +193,31 @@ export default function WatchPage() {
       {/* Main layout */}
       <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6">
         {/* Player ~70% */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
+
+          {/* Player header area */}
+          <div className="flex justify-end mb-3">
+             <div className="flex items-center gap-2">
+               <span className="text-sm font-bold text-white/50">Server:</span>
+               <select
+                 value={activeServer.id}
+                 onChange={(e) => {
+                   const server = EMBED_SERVERS.find(s => s.id === e.target.value);
+                   if (server) handleServerChange(server);
+                 }}
+                 className="bg-[#111] border border-[#333] text-white text-sm rounded px-3 py-1.5 outline-none cursor-pointer hover:bg-[#222]"
+               >
+                 {EMBED_SERVERS.map(s => (
+                   <option key={s.id} value={s.id}>{s.name}</option>
+                 ))}
+               </select>
+             </div>
+          </div>
 
           {/* Player wrapper */}
           <div
-            className="player-container relative w-full group"
-            style={{ aspectRatio: "16/9", background: "#000", borderRadius: 12, overflow: "hidden" }}
+            className="relative w-full"
+            style={{ aspectRatio: "16/9", background: "#0d0d0d", borderRadius: 12, overflow: "hidden" }}
           >
             {/* Loading spinner */}
             {playerLoading && (
@@ -203,45 +232,43 @@ export default function WatchPage() {
               </div>
             )}
 
-            <iframe
-              key={embedUrl}
-              src={embedUrl}
-              title={`${title} Player`}
-              className="w-full h-full"
-              allowFullScreen
-              allow="autoplay; fullscreen; picture-in-picture"
-              referrerPolicy="no-referrer"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-              onLoad={handlePlayerLoad}
-              style={{ width: "100%", height: "100%", border: "none" }}
-            />
-
-            {episodePanelOpen && type === "tv" && (
-              <EpisodePanel
-                tmdbId={id}
-                currentSeason={season}
-                currentEpisode={episode}
-                totalSeasons={Math.max(...seasons.map(s => s.season_number), 1)}
-                onSelectEpisode={handleSelectEpisode}
-                onClose={() => setEpisodePanelOpen(false)}
-                accentColor={accentColor}
-              />
-            )}
-
-            <PlayerControls
+            <PlayerOverlay
               type={type}
               runtime={info?.runtime || (info?.episode_run_time ? info.episode_run_time[0] : null)}
-              currentSeason={season}
-              currentEpisode={episode}
+              season={season}
+              episode={episode}
+              totalEpisodes={seasons.find(s => s.season_number === season)?.episode_count || 0}
               totalSeasons={Math.max(...seasons.map(s => s.season_number), 1)}
-              servers={EMBED_SERVERS}
-              activeServer={activeServer}
-              onServerChange={handleServerChange}
-              onNextEpisode={handleNextEpisode}
-              onToggleEpisodes={() => setEpisodePanelOpen((p) => !p)}
-              episodePanelOpen={episodePanelOpen}
+              onNextEpisode={startNextEpisodeCountdown}
+              onPrevEpisode={handlePrevEpisode}
+              onCycleServer={handleCycleServer}
               accentColor={accentColor}
-            />
+            >
+              <iframe
+                key={embedUrl}
+                src={embedUrl}
+                title={`${title} Player`}
+                className="w-full h-full"
+                allow="autoplay; fullscreen; picture-in-picture"
+                referrerPolicy="no-referrer"
+                onLoad={handlePlayerLoad}
+                style={{ width: "100%", aspectRatio: "16/9", border: "none" }}
+              />
+            </PlayerOverlay>
+
+            {/* Next episode countdown overlay */}
+            {nextCountdown !== null && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: "rgba(0,0,0,0.8)", zIndex: 3 }}>
+                <p className="text-lg font-bold text-white mb-2">Next episode in {nextCountdown}...</p>
+                <button
+                  onClick={cancelCountdown}
+                  className="px-5 py-2 rounded-full text-sm font-semibold"
+                  style={{ background: "#333", color: "#fff" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Source error hint */}
@@ -261,8 +288,60 @@ export default function WatchPage() {
               {info.overview && (
                 <p className="text-sm leading-relaxed mb-3" style={{ color: "#aaa" }}>{info.overview}</p>
               )}
+
+              {/* Horizontal Episodes List */}
+              {type === "tv" && episodes.length > 0 && (
+                <div className="mt-6 mb-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold text-white">Episodes</h3>
+                    <select
+                      value={season}
+                      onChange={(e) => { setSeason(Number(e.target.value)); setEpisode(1); }}
+                      className="px-3 py-1.5 rounded-md text-sm font-semibold bg-[#1a1a1a] border border-[#333] text-white outline-none cursor-pointer hover:bg-[#222]"
+                    >
+                      {seasons.map((s) => (
+                        <option key={s.id} value={s.season_number}>Season {s.season_number}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex overflow-x-auto gap-3 pb-4 no-scrollbar">
+                    {episodes.map((ep) => {
+                      const isActive = episode === ep.episode_number;
+                      return (
+                        <div
+                          key={ep.id}
+                          onClick={() => handleSelectEpisode(season, ep.episode_number)}
+                          className="flex flex-col gap-2 shrink-0 cursor-pointer group w-44"
+                        >
+                          <div className={`relative aspect-video rounded-lg overflow-hidden bg-[#111] border-2 transition-all duration-300 ${isActive ? "border-white" : "border-transparent group-hover:border-white/30 group-hover:scale-[1.02]"}`}>
+                            {ep.still_path ? (
+                              <img src={`https://image.tmdb.org/t/p/w300${ep.still_path}`} alt={ep.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs text-white/20">No Image</div>
+                            )}
+                            {isActive && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <div className="bg-white/20 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-white uppercase tracking-wider border border-white/20">
+                                  Playing
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className={`text-sm font-bold truncate ${isActive ? "text-white" : "text-white/70 group-hover:text-white"}`}>
+                              {ep.episode_number}. {ep.name}
+                            </p>
+                            <p className="text-xs text-white/40">{ep.runtime || 45}m</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {info.genres && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-4">
                   {info.genres.map((g) => (
                     <span key={g.id} className="px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ background: "#1a1a1a", color: "#888", border: "1px solid #2a2a2a" }}>
                       {g.name}

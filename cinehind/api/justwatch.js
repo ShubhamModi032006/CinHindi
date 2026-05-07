@@ -11,7 +11,8 @@ export default async function handler(req, res) {
 
   try {
     // Vercel parses JSON bodies automatically
-    const { query, variables } = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    const { query, variables } = body;
 
     const response = await fetch("https://apis.justwatch.com/graphql", {
       method: "POST",

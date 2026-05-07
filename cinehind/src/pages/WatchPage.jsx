@@ -143,9 +143,7 @@ export default function WatchPage() {
     setSeason(selectedSeason);
     setEpisode(selectedEpisode);
     saveContinueWatching({ id, type, title, poster, season: selectedSeason, episode: selectedEpisode });
-    searchParams.set("season", selectedSeason);
-    searchParams.set("episode", selectedEpisode);
-    navigate(`?${searchParams.toString()}`, { replace: true });
+    navigate("watch", { type, id, season: selectedSeason, episode: selectedEpisode, title, poster });
   };
 
   // Autoplay next episode countdown
@@ -271,11 +269,19 @@ export default function WatchPage() {
             )}
           </div>
 
-          {/* Source error hint */}
+          {/* Source error hint & Next Eps Button */}
           <div className="mt-2 flex items-center justify-between">
             <p className="text-xs" style={{ color: "#555" }}>
               {activeServer.name} · {type === "tv" ? `S${season} E${episode}` : "Movie"}
             </p>
+            {type === "tv" && (
+              <button
+                onClick={handleNextEpisode}
+                className="text-xs font-bold px-3 py-1.5 rounded bg-[#111] border border-[#333] hover:bg-[#222] transition-colors text-white"
+              >
+                Next Eps ⏭
+              </button>
+            )}
           </div>
 
           {/* Info below player */}

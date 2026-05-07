@@ -89,28 +89,6 @@ export default function PlayerOverlay({
         </div>
       )}
 
-      {/* Episode Navigator (TV only) */}
-      {type === "tv" && (
-        <div className="absolute bottom-0 left-0 right-0 h-10 bg-black bg-opacity-70 flex items-center justify-between px-4 z-10 pointer-events-auto backdrop-blur-sm border-t border-white/10">
-          <button
-            onClick={onPrevEpisode}
-            disabled={isFirstEpisode}
-            className={`text-sm font-bold ${isFirstEpisode ? "text-gray-500 cursor-not-allowed" : "text-white hover:scale-105 transition-transform"}`}
-          >
-            ← Prev
-          </button>
-          <span className="text-sm font-bold text-white tracking-wider">
-            S{season} E{episode}
-          </span>
-          <button
-            onClick={onNextEpisode}
-            disabled={isLastEpisode}
-            className={`text-sm font-bold ${isLastEpisode ? "text-gray-500 cursor-not-allowed" : "text-white hover:scale-105 transition-transform"}`}
-          >
-            Next →
-          </button>
-        </div>
-      )}
     </div>
   );
 }

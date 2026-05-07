@@ -248,9 +248,10 @@ export default function WatchPage() {
                 title={`${title} Player`}
                 className="w-full h-full"
                 allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
                 referrerPolicy="no-referrer"
                 onLoad={handlePlayerLoad}
-                style={{ width: "100%", aspectRatio: "16/9", border: "none" }}
+                style={{ width: "100%", height: "100%", border: "none" }}
               />
             </PlayerOverlay>
 

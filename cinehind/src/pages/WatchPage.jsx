@@ -5,6 +5,7 @@ import { fetchTmdb } from "../hooks/useTmdb";
 import MediaCard from "../components/ui/MediaCard";
 import PlayerOverlay from "../components/player/PlayerOverlay";
 import { EMBED_SERVERS } from "../config/servers";
+import { checkServerHealth, findHealthyServer, checkAllServersParallel, healthCache } from "../utils/serverHealth";
 
 export default function WatchPage() {
   const { navigate, saveContinueWatching, addToHistory, autoplay, accent } = useApp();
@@ -24,19 +25,15 @@ export default function WatchPage() {
   const [recs, setRecs]       = useState([]);
   const [info, setInfo]       = useState(null);
   
-  const [activeServer, setActiveServer] = useState(() => {
-    const saved = localStorage.getItem("cinhindi_last_server");
-    if (saved) {
-      const server = EMBED_SERVERS.find(s => s.id === saved);
-      if (server) return server;
-    }
-    return EMBED_SERVERS[0];
-  });
+  const [activeServer, setActiveServer] = useState(EMBED_SERVERS[0]);
   
-  const [playerLoading, setPlayerLoading] = useState(true);
+  const [serverStatus, setServerStatus] = useState("checking");
+  const [serverHealthMap, setServerHealthMap] = useState({});
+  const [retryCount, setRetryCount] = useState(0);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+
   const [nextCountdown, setNextCountdown] = useState(null);
   const countdownRef = useRef(null);
-  const loadTimerRef = useRef(null);
 
   const embedUrl = type === "movie" 
     ? activeServer.getMovieUrl(id) 
@@ -45,7 +42,57 @@ export default function WatchPage() {
   const handleServerChange = (server) => {
     setActiveServer(server);
     localStorage.setItem("cinhindi_last_server", server.id);
+    setIframeLoaded(false);
+    setRetryCount(0);
+    setServerStatus("ready");
   };
+
+  const initServer = async () => {
+    setServerStatus("checking");
+    const savedServerId = localStorage.getItem("cinhindi_last_server");
+    const { server, healthy } = await findHealthyServer(EMBED_SERVERS, savedServerId);
+    
+    if (healthy) {
+      setActiveServer(server);
+      setServerStatus("ready");
+    } else {
+      setServerStatus("failed");
+    }
+
+    const allResults = await checkAllServersParallel(EMBED_SERVERS);
+    const map = {};
+    allResults.forEach(r => { map[r.id] = r.healthy; });
+    setServerHealthMap(map);
+  };
+
+  useEffect(() => {
+    initServer();
+  }, []);
+
+  const handleIframeError = async () => {
+    if (retryCount >= EMBED_SERVERS.length - 1) {
+      setServerStatus("failed");
+      return;
+    }
+    setServerStatus("retrying");
+    setRetryCount(prev => prev + 1);
+
+    healthCache?.set?.(activeServer.id, { healthy: false, checkedAt: Date.now() });
+
+    const triedIds = EMBED_SERVERS.slice(0, retryCount + 1).map(s => s.id);
+    const remaining = EMBED_SERVERS.filter(s => !triedIds.includes(s.id));
+    const { server, healthy } = await findHealthyServer(remaining, null);
+
+    if (healthy) {
+      setActiveServer(server);
+      setServerStatus("ready");
+      localStorage.setItem("cinhindi_last_server", server.id);
+    } else {
+      setServerStatus("failed");
+    }
+  };
+
+  useEffect(() => { setIframeLoaded(false); }, [activeServer]);
 
   // Save to continue watching & history
   useEffect(() => {
@@ -79,21 +126,9 @@ export default function WatchPage() {
       .catch(() => setEpisodes([]));
   }, [id, type, season]);
 
-  // Reset loading when source or episode changes
   useEffect(() => {
-    setPlayerLoading(true);
     cancelCountdown();
-    clearTimeout(loadTimerRef.current);
-    loadTimerRef.current = setTimeout(() => {
-      setPlayerLoading(false);
-    }, 5000); 
-    return () => clearTimeout(loadTimerRef.current);
   }, [embedUrl]);
-
-  const handlePlayerLoad = () => {
-    clearTimeout(loadTimerRef.current);
-    setPlayerLoading(false);
-  };
 
   const handleCycleServer = () => {
     const idx = EMBED_SERVERS.findIndex((s) => s.id === activeServer.id);
@@ -195,20 +230,31 @@ export default function WatchPage() {
 
           {/* Player header area */}
           <div className="flex justify-end mb-3">
-             <div className="flex items-center gap-2">
-               <span className="text-sm font-bold text-white/50">Server:</span>
-               <select
-                 value={activeServer.id}
-                 onChange={(e) => {
-                   const server = EMBED_SERVERS.find(s => s.id === e.target.value);
-                   if (server) handleServerChange(server);
-                 }}
-                 className="bg-[#111] border border-[#333] text-white text-sm rounded px-3 py-1.5 outline-none cursor-pointer hover:bg-[#222]"
-               >
-                 {EMBED_SERVERS.map(s => (
-                   <option key={s.id} value={s.id}>{s.name}</option>
-                 ))}
-               </select>
+             <div className="relative group z-50">
+               <button className="flex items-center gap-2 bg-[#111] border border-[#333] text-white text-sm rounded px-3 py-1.5 hover:bg-[#222]">
+                 ⚙ <span>Server: {activeServer.name}</span>
+               </button>
+               <div className="absolute right-0 mt-1 w-48 bg-[#111] border border-[#333] rounded shadow-lg hidden group-hover:block">
+                 {EMBED_SERVERS.map(s => {
+                   const dotColor = {
+                     true: "#22c55e",
+                     false: "#ef4444",
+                     undefined: "#6b7280"
+                   }[serverHealthMap[s.id]];
+                   return (
+                     <button
+                       key={s.id}
+                       onClick={() => {
+                         handleServerChange(s);
+                         document.activeElement?.blur();
+                       }}
+                       className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#222] ${activeServer.id === s.id ? 'text-white font-bold' : 'text-gray-400'}`}
+                     >
+                       <span style={{ color: dotColor }}>●</span> {s.name}
+                     </button>
+                   );
+                 })}
+               </div>
              </div>
           </div>
 
@@ -217,43 +263,94 @@ export default function WatchPage() {
             className="relative w-full"
             style={{ aspectRatio: "16/9", background: "#0d0d0d", borderRadius: 12, overflow: "hidden" }}
           >
-            {/* Loading spinner */}
-            {playerLoading && (
-              <div className="absolute inset-0 flex items-center justify-center" style={{ background: "#0d0d0d", zIndex: 2 }}>
+            <style>{`
+              @keyframes shimmer-pulse {
+                0% { opacity: 0.6; }
+                50% { opacity: 0.2; }
+                100% { opacity: 0.6; }
+              }
+            `}</style>
+
+            {serverStatus === "checking" && (
+              <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", zIndex: 10 }}>
                 <div className="flex flex-col items-center gap-3">
-                  <div
-                    className="w-12 h-12 rounded-full border-2 animate-spin"
-                    style={{ borderColor: `${accentColor} transparent transparent transparent` }}
-                  />
-                  <p className="text-sm" style={{ color: "#888" }}>Loading {activeServer.name}...</p>
+                  <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accentColor} transparent transparent transparent` }} />
+                  <p className="text-white font-bold text-lg">Finding best server...</p>
+                  <p className="text-gray-400 text-sm">Checking {EMBED_SERVERS.length} servers...</p>
                 </div>
               </div>
             )}
 
-            <PlayerOverlay
-              type={type}
-              runtime={info?.runtime || (info?.episode_run_time ? info.episode_run_time[0] : null)}
-              season={season}
-              episode={episode}
-              totalEpisodes={seasons.find(s => s.season_number === season)?.episode_count || 0}
-              totalSeasons={Math.max(...seasons.map(s => s.season_number), 1)}
-              onNextEpisode={startNextEpisodeCountdown}
-              onPrevEpisode={handlePrevEpisode}
-              onCycleServer={handleCycleServer}
-              accentColor={accentColor}
-            >
-              <iframe
-                key={embedUrl}
-                src={embedUrl}
-                title={`${title} Player`}
-                className="w-full h-full"
-                allow="autoplay; fullscreen; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="no-referrer"
-                onLoad={handlePlayerLoad}
-                style={{ width: "100%", height: "100%", border: "none" }}
-              />
-            </PlayerOverlay>
+            {serverStatus === "retrying" && (
+              <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)", zIndex: 10 }}>
+                <div className="flex flex-col items-center gap-3">
+                  <div className="text-red-500 text-3xl">⚠</div>
+                  <p className="text-white font-bold text-lg">Server unavailable</p>
+                  <p className="text-gray-400 text-sm">Trying next server... (Attempt {retryCount + 1} of {EMBED_SERVERS.length})</p>
+                </div>
+              </div>
+            )}
+
+            {serverStatus === "failed" ? (
+              <div className="absolute inset-0 flex items-center justify-center" style={{ background: "#111", zIndex: 10 }}>
+                <div className="flex flex-col items-center text-center max-w-sm px-4">
+                  <div className="text-4xl mb-4">😞</div>
+                  <h3 className="text-xl font-bold text-white mb-2">All servers down</h3>
+                  <p className="text-gray-400 text-sm mb-6">
+                    We couldn't reach any of our streaming servers. This may be a network or firewall issue on your device. (Ad blockers or VPNs can sometimes cause this).
+                  </p>
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={() => {
+                        setRetryCount(0);
+                        initServer();
+                      }}
+                      className="px-4 py-2 bg-white text-black font-bold rounded hover:bg-gray-200"
+                    >
+                      Try Again
+                    </button>
+                    <button 
+                      onClick={() => navigate(-1)}
+                      className="px-4 py-2 bg-[#333] text-white font-bold rounded hover:bg-[#444]"
+                    >
+                      Go Back
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <PlayerOverlay
+                type={type}
+                runtime={info?.runtime || (info?.episode_run_time ? info.episode_run_time[0] : null)}
+                season={season}
+                episode={episode}
+                totalEpisodes={seasons.find(s => s.season_number === season)?.episode_count || 0}
+                totalSeasons={Math.max(...seasons.map(s => s.season_number), 1)}
+                onNextEpisode={startNextEpisodeCountdown}
+                onPrevEpisode={handlePrevEpisode}
+                onCycleServer={handleCycleServer}
+                accentColor={accentColor}
+              >
+                <iframe
+                  key={embedUrl}
+                  src={embedUrl}
+                  title={`${title} Player`}
+                  className="w-full h-full"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  referrerPolicy="no-referrer"
+                  onLoad={() => setIframeLoaded(true)}
+                  onError={handleIframeError}
+                  style={{ width: "100%", height: "100%", border: "none" }}
+                />
+              </PlayerOverlay>
+            )}
+
+            {serverStatus === "ready" && !iframeLoaded && (
+              <div className="absolute inset-0 bg-[#0d0d0d] flex items-center justify-center pointer-events-none" style={{ zIndex: 5, animation: "shimmer-pulse 1.5s infinite" }}>
+                <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: `${accentColor} transparent transparent transparent` }} />
+              </div>
+            )}
 
             {/* Next episode countdown overlay */}
             {nextCountdown !== null && (

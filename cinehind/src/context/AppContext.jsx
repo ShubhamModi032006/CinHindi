@@ -294,6 +294,8 @@ export function AppProvider({ children }) {
     if (!token) localStorage.removeItem(LS.WATCH_HISTORY);
     showToast("Watch history cleared");
 
+    localStorage.removeItem("cinhindi_taste_profile");
+
     if (token) {
       try {
         await fetch(`${API_URL}/api/history`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });

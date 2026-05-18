@@ -41,6 +41,18 @@ function topNKeys(counter, n) {
 // caching), extracts taste signals, and returns a profile object.
 // ─────────────────────────────────────────────────────────────
 export async function buildTasteProfile(watchHistory, fetchTmdb) {
+  // ── Step 0: Invalidate stale profile cache ────────────
+  try {
+    const cachedProfile = JSON.parse(
+      localStorage.getItem("cinhindi_taste_profile") || "{}"
+    );
+    if (cachedProfile.historyLength !== watchHistory.length) {
+      localStorage.removeItem("cinhindi_taste_profile");
+    }
+  } catch {
+    localStorage.removeItem("cinhindi_taste_profile");
+  }
+
   // ── Step 1: Load detail cache from localStorage ────────────
   let cache = {};
   try {
@@ -157,6 +169,7 @@ export async function buildTasteProfile(watchHistory, fetchTmdb) {
     recentSeed,
     confidence,
     builtAt: Date.now(),
+    historyLength: watchHistory.length,
   };
 
   try {

@@ -212,6 +212,8 @@ export default function HomePage() {
   // ─────────────────────────────────────────────────────────────
   // Recommendation rows — powered by taste profile
   // ─────────────────────────────────────────────────────────────
+  const watchHistoryKey = watchHistory.map(item => item.id).join(",");
+
   useEffect(() => {
     if (watchHistory.length === 0) {
       setRecRowSeed(     { data: [], loading: false, basedOn: "" });
@@ -359,7 +361,7 @@ export default function HomePage() {
     };
 
     run();
-  }, [watchHistory, activeProvider?.id, mode]);
+  }, [watchHistoryKey, activeProvider?.id, mode]);
 
   // ─────────────────────────────────────────────────────────────
   // Dynamic row labels

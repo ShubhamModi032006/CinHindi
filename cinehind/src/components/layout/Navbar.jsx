@@ -35,7 +35,7 @@ export default function Navbar() {
   const accentColor = accent === "orange" ? "#f5a623" : accent === "blue" ? "#2563eb" : accent === "purple" ? "#7c3aed" : "#e50914";
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20);
+    const fn = () => setScrolled(window.scrollY > 80);
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
@@ -73,47 +73,26 @@ export default function Navbar() {
         </div>
       )}
 
-      <nav
-        className="fixed top-0 left-0 right-0 z-[9990] transition-all duration-300"
-        style={{
-          background: scrolled ? "rgba(0,0,0,0.88)" : "linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)",
-          backdropFilter: scrolled ? "blur(16px)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(16px)" : "none",
-          borderBottom: scrolled ? "1px solid var(--border)" : "none",
-        }}
-      >
-        <div className="max-w-screen-2xl mx-auto px-4 md:px-6 flex items-center justify-between h-16">
+      <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
+        <div className="max-w-screen-2xl mx-auto px-4 md:px-6 flex items-center justify-between h-16 w-full">
 
           {/* ── Logo ─────────────────────────────────────────── */}
           <button
             onClick={() => navigate("home")}
-            className="font-black text-xl md:text-2xl tracking-tighter select-none flex-shrink-0"
-            style={{
-              background: "linear-gradient(135deg, #e50914 0%, #f5a623 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
+            className="navbar-logo"
           >
-            CINNY
+            CIN<span>NY</span>
           </button>
 
           {/* ── Desktop nav links (centre) ───────────────────── */}
-          <div className="hidden md:flex items-center gap-0.5">
+          <div className="hidden md:flex items-center gap-6 nav-links">
             {NAV_LINKS.map((link) => (
               <button
                 key={link.page}
                 onClick={() => navigate(link.page)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-105 relative"
-                style={{ color: isActive(link.page) ? accentColor : "var(--text-secondary)" }}
+                className={`nav-link ${isActive(link.page) ? "active" : ""}`}
               >
                 {link.name}
-                {isActive(link.page) && (
-                  <span
-                    className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full"
-                    style={{ background: accentColor }}
-                  />
-                )}
               </button>
             ))}
           </div>

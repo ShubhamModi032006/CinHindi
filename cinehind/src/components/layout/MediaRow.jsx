@@ -13,6 +13,25 @@ export default function MediaRow({
   showRank = false,
 }) {
   const scrollRef = useRef(null);
+  const rowRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('row-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const el = rowRef.current;
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Local copy of items so dismiss can remove cards instantly
   const [localItems, setLocalItems] = useState(items);
@@ -27,12 +46,14 @@ export default function MediaRow({
     scrollRef.current.scrollBy({ left: dir * (cardWidth + 12) * 3, behavior: "smooth" });
   };
 
+  const cleanTitle = title.replace(/[🔥🎬📺🏆🆕⭐✨🎭🌐]/g, '').trim();
+
   return (
-    <div className={`mb-10 ${className}`}>
+    <div ref={rowRef} className={`media-row mb-10 ${className}`}>
       {/* Row title */}
-      <div className="flex items-center justify-between mb-4 px-4 md:px-6">
-        <h2 className="text-base md:text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-          {title}
+      <div className="row-header">
+        <h2 className="row-title">
+          {cleanTitle}
         </h2>
       </div>
 
@@ -54,7 +75,7 @@ export default function MediaRow({
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)
             : localItems.map((item, i) => (
-              <div key={`${item.id}-${i}`} className="card-anim flex items-center shrink-0" style={{ animationDelay: `${i * 50}ms`, position: "relative" }}>
+              <div key={`${item.id}-${i}`} className="flex items-center shrink-0" style={{ position: "relative" }}>
                 {showRank && i < 10 && (
                   <span
                     className="select-none"
@@ -73,7 +94,7 @@ export default function MediaRow({
                     {item.jwRank || i + 1}
                   </span>
                 )}
-                <div style={{ zIndex: 1, position: "relative" }}>
+                <div style={{ zIndex: 1, position: "relative", animationDelay: `${i * 60}ms` }} className="card-anim">
                   <MediaCard
                     item={item}
                     index={i}

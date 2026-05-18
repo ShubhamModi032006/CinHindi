@@ -98,8 +98,9 @@ export default function HeroSection() {
       </div>
 
       {/* Gradients */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)" }} />
-      <div className="absolute inset-0 grad-hero pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(105deg, rgba(8,8,8,1) 0%, rgba(8,8,8,0.85) 30%, rgba(8,8,8,0.3) 60%, transparent 100%)" }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(8,8,8,1) 0%, rgba(8,8,8,0.5) 25%, transparent 60%)" }} />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, rgba(8,8,8,0.4) 0%, transparent 30%)" }} />
 
       {/* Content */}
       <div
@@ -116,54 +117,39 @@ export default function HeroSection() {
           {genres.map((g) => (
             <span
               key={g}
-              className="text-xs px-2.5 py-0.5 rounded-full font-medium"
-              style={{ background: `${accentColor}22`, border: `1px solid ${accentColor}55`, color: accentColor }}
+              className="genre-badge"
             >
               {g}
             </span>
           ))}
         </div>
 
-        <h1
-          className="font-black text-white mb-2"
-          style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", lineHeight: 1.1, textShadow: "0 2px 20px rgba(0,0,0,0.8)" }}
-        >
+        <h1 className="hero-title mb-2">
           {title}
         </h1>
 
-        <div className="flex items-center gap-3 mb-3 text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
-          {rating && <span className="font-semibold" style={{ color: "#ffd700" }}>⭐ {rating}</span>}
+        <div className="hero-meta mb-3">
+          {rating && <span className="hero-rating">⭐ {rating}</span>}
           {year && <span>{year}</span>}
         </div>
 
-        <p
-          className="text-sm leading-relaxed mb-6"
-          style={{
-            color: "rgba(255,255,255,0.8)",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
+        <p className="hero-overview mb-6">
           {item.overview}
         </p>
 
         <div className="flex gap-3">
           <button
             onClick={() => navigate("watch", { id: item.id, type: "movie", title, poster: posterUrl(item.poster_path), season: 1, episode: 1 })}
-            className="flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white text-sm transition-all hover:scale-105 hover:brightness-110"
-            style={{ background: accentColor, boxShadow: `0 4px 20px ${accentColor}66` }}
+            className="btn-play"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             Play Now
           </button>
           <button
             onClick={() => navigate("detail", { id: item.id, type: "movie" })}
-            className="flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white text-sm transition-all hover:scale-105"
-            style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.3)" }}
+            className="btn-info"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             More Info
@@ -177,12 +163,7 @@ export default function HeroSection() {
           <button
             key={i}
             onClick={() => goTo(i)}
-            className="rounded-full transition-all"
-            style={{
-              width: i === current ? 24 : 6,
-              height: 6,
-              background: i === current ? accentColor : "rgba(255,255,255,0.4)",
-            }}
+            className={`hero-dot ${i === current ? "active" : ""}`}
           />
         ))}
       </div>

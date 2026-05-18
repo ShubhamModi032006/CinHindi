@@ -10,7 +10,7 @@ function CastCircle({ person }) {
   const [imgErr, setImgErr] = useState(false);
   return (
     <div className="flex flex-col items-center gap-1 flex-shrink-0" style={{ width: 64 }}>
-      <div className="rounded-full overflow-hidden" style={{ width: 48, height: 48, background: "var(--surface)" }}>
+      <div className="rounded-full overflow-hidden" style={{ width: 48, height: 48, background: "var(--bg-card)" }}>
         {person.profile_path && !imgErr ? (
           <img
             src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
@@ -289,9 +289,9 @@ export default function DetailPage() {
 
       {/* ── EPISODE LIST (TV only) ───────────────────────── */}
       {type === "tv" && showEpisodes && episodes.length > 0 && (
-        <div className="px-6 md:px-12 py-6" style={{ background: "var(--surface)", borderTop: "1px solid var(--border)" }}>
-          <h2 className="text-base font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-            Season {selectedSeason} Episodes
+        <div className="px-6 md:px-12 py-6" style={{ background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
+          <h2 className="text-base font-bold mb-3" style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)", letterSpacing: "1px", textTransform: "uppercase" }}>
+            SEASON {selectedSeason} EPISODES
           </h2>
           <div className="grid gap-3">
             {episodes.map((ep) => (
@@ -299,7 +299,7 @@ export default function DetailPage() {
                 key={ep.id}
                 onClick={() => navigate("watch", { id, type, title, poster, season: selectedSeason, episode: ep.episode_number })}
                 className="flex items-center gap-3 p-3 rounded-xl text-left transition-all hover:scale-[1.01]"
-                style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+                style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}
               >
                 {ep.still_path && (
                   <img
@@ -324,7 +324,9 @@ export default function DetailPage() {
       {/* ── RECOMMENDATIONS ──────────────────────────────── */}
       {recs.length > 0 && (
         <div className="px-4 md:px-6 py-8" style={{ background: "var(--bg)" }}>
-          <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>More Like This</h2>
+          <div className="row-header mb-4 px-0">
+            <h2 className="row-title">MORE LIKE THIS</h2>
+          </div>
           <div className="flex gap-3 overflow-x-auto scroll-row pb-2">
             {recs.map((item, i) => (
               <div key={item.id} className="card-anim" style={{ animationDelay: `${i * 40}ms` }}>

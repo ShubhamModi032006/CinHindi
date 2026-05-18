@@ -69,10 +69,9 @@ export default function GenrePage() {
         Back
       </button>
 
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-black" style={{ color: "var(--text-primary)" }}>
-          {genreName || "Genre"} Movies & Shows
-          <span className="inline-block ml-3" style={{ width: 60, height: 3, background: accentColor, verticalAlign: "middle", borderRadius: 2 }} />
+      <div className="mb-6 row-header">
+        <h1 className="row-title" style={{ color: "var(--text-primary)" }}>
+          {genreName.toUpperCase() || "GENRE"}
         </h1>
       </div>
 
@@ -84,12 +83,12 @@ export default function GenrePage() {
             onClick={() => setMediaTab(t)}
             className="px-5 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105"
             style={{
-              background: mediaTab === t ? accentColor : "var(--surface)",
+              background: mediaTab === t ? accentColor : "var(--bg-card)",
               color: mediaTab === t ? "white" : "var(--text-secondary)",
               border: `1px solid ${mediaTab === t ? accentColor : "var(--border)"}`,
             }}
           >
-            {t === "movie" ? "🎬 Movies" : "📺 TV Shows"}
+            {t === "movie" ? "MOVIES" : "TV SHOWS"}
           </button>
         ))}
       </div>
@@ -103,7 +102,7 @@ export default function GenrePage() {
             onClick={() => setSort(o.value)}
             className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105"
             style={{
-              background: sort === o.value ? accentColor : "var(--surface)",
+              background: sort === o.value ? accentColor : "var(--bg-card)",
               color: sort === o.value ? "white" : "var(--text-secondary)",
               border: `1px solid ${sort === o.value ? accentColor : "var(--border)"}`,
             }}
@@ -117,8 +116,7 @@ export default function GenrePage() {
         <GridSkeleton count={15} />
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center py-24 gap-4">
-          <div style={{ fontSize: 64 }}>🎭</div>
-          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)" }}>No results for this genre</p>
+          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>NO RESULTS FOR THIS GENRE</p>
         </div>
       ) : (
         <>

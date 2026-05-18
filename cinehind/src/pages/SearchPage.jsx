@@ -82,9 +82,9 @@ export default function SearchPage() {
 
   return (
     <div className="page-enter pt-24 px-4 md:px-6" style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      <div className="mb-6">
-        <h1 className="text-2xl font-black" style={{ color: "var(--text-primary)" }}>
-          {query ? `Results for "${query}"` : "🔍 Search"}
+      <div className="mb-8 row-header">
+        <h1 className="row-title">
+          {query ? `RESULTS FOR "${query.toUpperCase()}"` : "SEARCH"}
         </h1>
       </div>
 
@@ -92,8 +92,7 @@ export default function SearchPage() {
 
       {!loading && query && total === 0 && (
         <div className="flex flex-col items-center py-24 gap-4">
-          <div style={{ fontSize: 64 }}>🔍</div>
-          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)" }}>No results for "{query}"</p>
+          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>NO RESULTS FOR "{query.toUpperCase()}"</p>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Try different keywords or check spelling</p>
         </div>
       )}
@@ -101,9 +100,9 @@ export default function SearchPage() {
       {!loading && !query && (
         <div className="flex flex-col gap-8">
           {relatedItems.items.length > 0 && (
-            <div>
-              <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-secondary)" }}>
-                ✨ Because you searched for "{relatedItems.title}"
+            <div className="mb-8">
+              <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>
+                BECAUSE YOU SEARCHED FOR "{relatedItems.title.toUpperCase()}"
               </h2>
               <div className="flex gap-4 scroll-row snap-x pb-2" style={{ scrollSnapType: "x mandatory" }}>
                 {relatedItems.items.map((item, i) => (
@@ -115,8 +114,10 @@ export default function SearchPage() {
             </div>
           )}
 
-          <div>
-            <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-secondary)" }}>🔥 Trending Right Now</h2>
+          <div className="mb-8">
+            <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>
+              TRENDING RIGHT NOW
+            </h2>
             <div className="flex gap-4 scroll-row snap-x pb-2" style={{ scrollSnapType: "x mandatory" }}>
               {trending.map((item, i) => (
                 <div key={item.id} className="snap-start shrink-0 card-anim" style={{ width: 150, animationDelay: `${i * 40}ms` }}>
@@ -130,9 +131,9 @@ export default function SearchPage() {
 
       {!loading && results.movies.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-            🎬 Movies
-            <span className="ml-2 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>({results.movies.length})</span>
+          <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>
+            MOVIES
+            <span className="ml-2 text-sm font-normal" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-body)" }}>({results.movies.length})</span>
           </h2>
           <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
             {results.movies.map((item, i) => (
@@ -146,9 +147,9 @@ export default function SearchPage() {
 
       {!loading && results.tv.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-            📺 TV Shows
-            <span className="ml-2 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>({results.tv.length})</span>
+          <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>
+            TV SHOWS
+            <span className="ml-2 text-sm font-normal" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-body)" }}>({results.tv.length})</span>
           </h2>
           <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
             {results.tv.map((item, i) => (
@@ -162,9 +163,9 @@ export default function SearchPage() {
 
       {!loading && results.anime.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-            🎌 Anime
-            <span className="ml-2 text-sm font-normal" style={{ color: "var(--text-secondary)" }}>({results.anime.length})</span>
+          <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>
+            ANIME
+            <span className="ml-2 text-sm font-normal" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-body)" }}>({results.anime.length})</span>
           </h2>
           <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
             {results.anime.map((item, i) => (

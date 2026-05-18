@@ -109,7 +109,7 @@ export default function HiddenGemsPage() {
       onClick={() => onChange(value)}
       className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105"
       style={{
-        background: current === value ? goldColor : "var(--surface)",
+        background: current === value ? goldColor : "var(--bg-card)",
         color: current === value ? "#000" : "var(--text-secondary)",
         border: `1px solid ${current === value ? goldColor : "var(--border)"}`,
       }}
@@ -121,13 +121,10 @@ export default function HiddenGemsPage() {
   return (
     <div className="page-enter pt-24 px-4 md:px-6" style={{ minHeight: "100vh", background: "var(--bg)" }}>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-black" style={{ color: goldColor }}>
-          💎 Hidden Gems
+      <div className="mb-6 row-header">
+        <h1 className="row-title" style={{ color: goldColor }}>
+          HIDDEN GEMS
         </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Great content nobody talks about
-        </p>
       </div>
 
       {/* Tabs */}
@@ -139,7 +136,7 @@ export default function HiddenGemsPage() {
             className="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105 relative"
             style={{
               color: activeTab === t.id ? goldColor : "var(--text-secondary)",
-              background: activeTab === t.id ? `${goldColor}18` : "var(--surface)",
+              background: activeTab === t.id ? `${goldColor}18` : "var(--bg-card)",
               border: `1px solid ${activeTab === t.id ? goldColor : "var(--border)"}`,
             }}
           >
@@ -170,8 +167,7 @@ export default function HiddenGemsPage() {
           <GridSkeleton count={15} />
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center py-24 gap-4">
-            <div style={{ fontSize: 64 }}>💎</div>
-            <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)" }}>No hidden gems found</p>
+            <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>NO HIDDEN GEMS FOUND</p>
           </div>
         ) : (
           <>

@@ -81,126 +81,72 @@ export default function MediaCard({ item, index = 0, type = "movie", width = 160
 
   return (
     <div
-      className="card-hover flex-shrink-0 relative rounded-lg overflow-hidden cursor-pointer"
-      style={{
-        width,
-        animationDelay: `${index * 50}ms`,
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className="media-card"
+      style={{ width }}
       onClick={() => navigate("detail", { id, type: itemType })}
     >
-      {/* Poster */}
-      <div style={{
-        width: isPercentWidth ? "100%" : width,
-        height: isPercentWidth ? undefined : cardHeight,
-        aspectRatio: isPercentWidth ? "2/3" : undefined,
-        position: "relative",
-        background: "var(--surface)",
-        borderRadius: 8,
-        overflow: "hidden",
-      }}>
-        {poster && !imgError ? (
-          <img
-            src={poster}
-            alt={title}
-            loading="lazy"
-            onError={() => setImgError(true)}
-            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 8 }}
-          />
+      {poster && !imgError ? (
+        <img
+          src={poster}
+          alt={title}
+          loading="lazy"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <FilmPlaceholder />
+      )}
+
+      {/* Bookmark top-left */}
+      <button
+        ref={bmRef}
+        onClick={handleBookmark}
+        className="absolute z-10 w-7 h-7 flex items-center justify-center rounded-full"
+        style={{
+          top: "8px",
+          left: onDismiss ? "40px" : "8px",
+          background: "rgba(0,0,0,0.6)",
+          backdropFilter: "blur(4px)"
+        }}
+        title={saved ? "Remove from Watch Later" : "Add to Watch Later"}
+      >
+        {saved ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill={accentColor}>
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
         ) : (
-          <FilmPlaceholder />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
         )}
+      </button>
 
-        {/* Bookmark top-left */}
-        <button
-          ref={bmRef}
-          onClick={handleBookmark}
-          className="absolute top-2 left-2 z-10 w-7 h-7 flex items-center justify-center rounded-full"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
-          title={saved ? "Remove from Watch Later" : "Add to Watch Later"}
-        >
-          {saved ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill={accentColor}>
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-            </svg>
-          )}
-        </button>
-
-        {/* Rating badge top-right */}
-        {rating && (
-          <div
-            className="absolute top-2 right-2 px-1.5 py-0.5 rounded text-xs font-bold"
-            style={{ background: "rgba(0,0,0,0.75)", color: accentColor }}
-          >
-            ⭐ {rating}
-          </div>
-        )}
-
-        {/* Hover overlay */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-end pb-3 gap-2 transition-opacity duration-200"
-          style={{
-            background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%)",
-            opacity: hovered ? 1 : 0,
-            borderRadius: 8,
-          }}
-        >
-          <p className="text-white text-xs font-semibold text-center px-2 leading-tight" style={{ maxWidth: "90%" }}>
-            {title}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={handlePlay}
-              className="flex items-center gap-1 text-xs font-bold text-white rounded-full px-3 py-1.5 transition-transform hover:scale-105"
-              style={{ background: accentColor }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-              Play
-            </button>
-            <button
-              onClick={handleInfo}
-              className="flex items-center gap-1 text-xs font-bold text-white rounded-full px-3 py-1.5 transition-transform hover:scale-105"
-              style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.3)" }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              Info
-            </button>
-          </div>
-          {/* Not Interested — only shown when onDismiss handler is provided */}
-          {onDismiss && (
-            <button
-              onClick={handleDismiss}
-              className="flex items-center gap-1 text-xs font-semibold rounded-full px-2.5 py-1 transition-all hover:scale-105"
-              style={{
-                background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                color: "rgba(255,255,255,0.6)",
-                backdropFilter: "blur(4px)",
-              }}
-              title="Not Interested"
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-              Not Interested
-            </button>
-          )}
+      {/* Rating badge top-right */}
+      {rating && (
+        <div className="media-card-rating">
+          ⭐ {rating}
         </div>
-      </div>
+      )}
 
-      {/* Below poster */}
-      <div className="mt-2 px-0.5">
-        <p className="text-xs font-medium truncate" style={{ color: "var(--text-primary)" }}>{title}</p>
-        <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+      {/* Hover overlay */}
+      <div className="media-card-overlay">
+        {onDismiss && (
+          <button
+            onClick={handleDismiss}
+            className="media-card-dismiss"
+            title="Not Interested"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        )}
+        <button onClick={handlePlay} className="media-card-play">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+        </button>
+        <p className="media-card-title">{title}</p>
+        <p className="media-card-year">
           {year}{year && itemType === "tv" && item.number_of_seasons ? " • " : ""}
           {itemType === "tv" && item.number_of_seasons ? `${item.number_of_seasons}S` : ""}
         </p>

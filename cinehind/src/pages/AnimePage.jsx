@@ -87,7 +87,7 @@ export default function AnimePage() {
 
   const loadMore = () => { const next = page + 1; setPage(next); fetchAnime(next, false); };
 
-  const title = activeProvider ? `${activeProvider.label} Anime` : "🎌 Anime";
+  const title = activeProvider ? `${activeProvider.label} ANIME` : "ANIME";
   const highlightColor = activeProvider?.color || "transparent";
   const gradientStyle = activeProvider ? {} : {
     background: "linear-gradient(135deg, #7c3aed, #2563eb)",
@@ -97,13 +97,13 @@ export default function AnimePage() {
   };
 
   return (
-    <div className="page-enter pt-20 px-4 md:px-6" style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black" style={activeProvider ? { color: activeProvider.color } : gradientStyle}>
+    <div className="page-enter pt-24 px-4 md:px-6" style={{ minHeight: "100vh", background: "var(--bg)" }}>
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <div className="row-header mb-0">
+          <h1 className="row-title" style={activeProvider ? { color: activeProvider.color } : gradientStyle}>
             {title}
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+          <p className="text-xs mt-1 ml-4" style={{ color: "var(--text-secondary)" }}>
             {activeProvider ? activeProvider.brand : "Global · All sources"}
           </p>
         </div>
@@ -114,7 +114,7 @@ export default function AnimePage() {
               onClick={() => setSort(o.value)}
               className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105"
               style={{
-                background: sort === o.value ? (activeProvider?.color || "#7c3aed") : "var(--surface)",
+                background: sort === o.value ? (activeProvider?.color || "#7c3aed") : "var(--bg-card)",
                 color: sort === o.value ? "white" : "var(--text-secondary)",
                 border: `1px solid ${sort === o.value ? (activeProvider?.color || "#7c3aed") : "var(--border)"}`,
               }}
@@ -129,9 +129,8 @@ export default function AnimePage() {
         <GridSkeleton count={15} />
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center py-24 gap-4">
-          <div style={{ fontSize: 64 }}>🎌</div>
-          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)" }}>
-            {activeProvider ? `No anime on ${activeProvider.brand}` : "No anime found"}
+          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>
+            {activeProvider ? `NO ANIME ON ${activeProvider.brand.toUpperCase()}` : "NO ANIME FOUND"}
           </p>
         </div>
       ) : (

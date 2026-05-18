@@ -35,9 +35,9 @@ export default function SettingsPage() {
   };
 
   const Section = ({ title, children }) => (
-    <div className="mb-8 rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <div className="mb-8 rounded-2xl overflow-hidden" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
       <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
-        <h2 className="font-bold text-sm" style={{ color: accentColor }}>{title}</h2>
+        <h2 className="font-bold text-sm" style={{ color: accentColor, fontFamily: "var(--font-display)", letterSpacing: "1px" }}>{title}</h2>
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -45,15 +45,14 @@ export default function SettingsPage() {
 
   return (
     <div className="page-enter pt-24 px-4 md:px-6 max-w-2xl mx-auto" style={{ minHeight: "100vh", background: "var(--bg)" }}>
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-black" style={{ color: "var(--text-primary)" }}>
-          ⚙️ Settings
-          <span className="inline-block ml-3" style={{ width: 60, height: 3, background: accentColor, verticalAlign: "middle", borderRadius: 2 }} />
+      <div className="mb-8 row-header">
+        <h1 className="row-title">
+          SETTINGS
         </h1>
       </div>
 
       {/* Appearance */}
-      <Section title="🎨 Appearance">
+      <Section title="APPEARANCE">
         {/* Theme */}
         <div className="mb-6">
           <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Theme</p>
@@ -63,7 +62,7 @@ export default function SettingsPage() {
                 key={t.key}
                 className="flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01]"
                 style={{
-                  background: theme === t.key ? `${accentColor}18` : "var(--card)",
+                  background: theme === t.key ? `${accentColor}18` : "var(--bg-elevated)",
                   border: `1px solid ${theme === t.key ? accentColor : "var(--border)"}`,
                 }}
               >
@@ -118,7 +117,7 @@ export default function SettingsPage() {
       </Section>
 
       {/* Content Preferences */}
-      <Section title="🌍 Content Preferences">
+      <Section title="CONTENT PREFERENCES">
         <div>
           <p className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Default Content Mode</p>
           <div className="flex gap-2 flex-wrap">
@@ -132,7 +131,7 @@ export default function SettingsPage() {
                 onClick={() => handleChange(setMode, m.value)}
                 className="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105"
                 style={{
-                  background: mode === m.value ? accentColor : "var(--card)",
+                  background: mode === m.value ? accentColor : "var(--bg-elevated)",
                   color: mode === m.value ? "white" : "var(--text-secondary)",
                   border: `1px solid ${mode === m.value ? accentColor : "var(--border)"}`,
                 }}
@@ -145,7 +144,7 @@ export default function SettingsPage() {
       </Section>
 
       {/* Playback */}
-      <Section title="▶ Playback">
+      <Section title="PLAYBACK">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Autoplay Next Episode</p>
@@ -167,7 +166,7 @@ export default function SettingsPage() {
       </Section>
 
       {/* Data */}
-      <Section title="🗑 Data">
+      <Section title="DATA">
         {/* Clear Watch History */}
         <div className="flex items-center justify-between mb-4">
           <div>

@@ -471,7 +471,7 @@ export default function WatchPage() {
               msOverflowStyle: "none",  /* IE/Edge */
             }}
           >
-            <h3 className="text-sm font-bold mb-3 px-1" style={{ color: "#888" }}>More Like This</h3>
+            <h3 className="text-sm font-bold mb-3 px-1" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>MORE LIKE THIS</h3>
             <div className="flex flex-col gap-3">
               {recs.map((item, i) => (
                 <div key={item.id}>

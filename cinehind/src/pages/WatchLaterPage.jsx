@@ -8,12 +8,11 @@ export default function WatchLaterPage() {
   return (
     <div className="page-enter pt-24 px-4 md:px-6" style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black" style={{ color: "var(--text-primary)" }}>
-            🔖 Watch Later
-            <span className="inline-block ml-3" style={{ width: 60, height: 3, background: accentColor, verticalAlign: "middle", borderRadius: 2 }} />
+        <div className="row-header mb-0">
+          <h1 className="row-title">
+            WATCH LATER
           </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>{watchLater.length} saved</p>
+          <p className="text-sm mt-1 ml-4" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-body)" }}>{watchLater.length} saved</p>
         </div>
         <button
           onClick={() => navigate("home")}
@@ -29,8 +28,7 @@ export default function WatchLaterPage() {
 
       {watchLater.length === 0 ? (
         <div className="flex flex-col items-center py-24 gap-4">
-          <div style={{ fontSize: 72 }}>🔖</div>
-          <p className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>Nothing saved yet</p>
+          <p className="text-xl font-bold" style={{ color: "var(--text-primary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>NOTHING SAVED YET</p>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Tap the bookmark icon on any card to save it here</p>
           <button
             onClick={() => navigate("home")}

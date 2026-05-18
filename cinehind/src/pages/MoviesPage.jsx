@@ -103,19 +103,17 @@ export default function MoviesPage() {
 
   const loadMore = () => { const next = page + 1; setPage(next); fetchMovies(next, false); };
 
-  const title = activeProvider ? `${activeProvider.label} Movies` : "🎬 Movies";
+  const title = activeProvider ? `${activeProvider.label} MOVIES` : "MOVIES";
   const sub   = activeProvider ? activeProvider.brand : mode === "hollywood" ? "Hollywood" : mode === "mixed" ? "Indian & Global" : "Indian";
 
   return (
-    <div className="page-enter pt-20 px-4 md:px-6" style={{ minHeight: "100vh", background: "var(--bg)" }}>
+    <div className="page-enter pt-24 px-4 md:px-6" style={{ minHeight: "100vh", background: "var(--bg)" }}>
       {/* Title + sort */}
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black" style={{ color: activeProvider ? activeProvider.color : "var(--text-primary)" }}>
+      <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+        <div className="row-header mb-0">
+          <h1 className="row-title" style={{ color: activeProvider ? activeProvider.color : "var(--text-primary)" }}>
             {title}
-            <span className="inline-block ml-3" style={{ width: 50, height: 3, background: activeProvider?.color || accentColor, verticalAlign: "middle", borderRadius: 2 }} />
           </h1>
-          <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>{sub}</p>
         </div>
         {/* Sort chips */}
         <div className="flex gap-2">
@@ -125,7 +123,7 @@ export default function MoviesPage() {
               onClick={() => setSort(o.value)}
               className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:scale-105"
               style={{
-                background: sort === o.value ? (activeProvider?.color || accentColor) : "var(--surface)",
+                background: sort === o.value ? (activeProvider?.color || accentColor) : "var(--bg-card)",
                 color: sort === o.value ? "white" : "var(--text-secondary)",
                 border: `1px solid ${sort === o.value ? (activeProvider?.color || accentColor) : "var(--border)"}`,
               }}
@@ -143,8 +141,7 @@ export default function MoviesPage() {
         <GridSkeleton count={15} />
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center py-24 gap-4">
-          <div style={{ fontSize: 64 }}>🎬</div>
-          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)" }}>No movies found</p>
+          <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-display)", letterSpacing: "1px" }}>NO MOVIES FOUND</p>
         </div>
       ) : (
         <>
